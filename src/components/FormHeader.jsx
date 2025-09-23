@@ -131,7 +131,7 @@ const FormHeader = ({ published = false, acceptingResponses = false }) => {
               py: 0.8,
               mx: 2,
               mb: 2,
-              height:15,
+              height:20,
               fontSize: isSm ? "0.7rem" : "0.9rem",
               "& .MuiAlert-message": {
                 width: "100%",
@@ -170,7 +170,7 @@ const FormHeader = ({ published = false, acceptingResponses = false }) => {
               underline="hover"
               sx={{
                 fontSize: isSm ? "0.7rem" : "0.9rem",
-                color: "#141313d5",
+                color: "#14131389",
                 fontWeight: 500,
                 whiteSpace: "nowrap",
               }}
