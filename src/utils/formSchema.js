@@ -1,18 +1,17 @@
-// Form schema utilities and default data
-
 export const fieldTypes = {
-  text: { label: 'Text Input', icon: '📝' },
-  number: { label: 'Number Input', icon: '🔢' },
-  select: { label: 'Select Dropdown', icon: '📋' },
-  checkbox: { label: 'Checkbox', icon: '☑️' },
-  radio: { label: 'Radio Group', icon: '🔘' }
+  text: { label: 'Text Input' },
+  number: { label: 'Number Input' },
+  select: { label: 'Dropdown' },
+  checkbox: { label: 'Checkbox' },
+  radio: { label: 'Radio Group' },
+  multipleChoice: { label: 'Multiple Choice' }
 };
 
 export const createNewField = (type, id) => {
   const baseField = {
     id: id || `field_${Date.now()}`,
     type,
-    label: `New ${fieldTypes[type].label}`,
+    label: `New ${fieldTypes[type]?.label || 'Field'}`,
     required: false,
     conditions: []
   };
@@ -24,6 +23,7 @@ export const createNewField = (type, id) => {
       return { ...baseField, placeholder: 'Enter number...', min: '', max: '' };
     case 'select':
     case 'radio':
+    case 'multipleChoice':
       return { ...baseField, options: ['Option 1', 'Option 2'] };
     case 'checkbox':
       return { ...baseField, defaultChecked: false };
@@ -47,7 +47,7 @@ export const defaultFormSchema = {
     {
       id: 'q2',
       type: 'text',
-      label: 'What is your car model?',
+      label: 'Which model do you have?',
       placeholder: 'e.g., Toyota Camry',
       required: false,
       conditions: [
@@ -56,12 +56,20 @@ export const defaultFormSchema = {
     },
     {
       id: 'q3',
-      type: 'radio',
-      label: 'How often do you drive?',
-      options: ['Daily', 'Weekly', 'Monthly', 'Rarely'],
+      type: 'select',
+      label: 'Do you want a loan?',
+      required: true,
+      options: ['Yes', 'No'],
+      conditions: []
+    },
+    {
+      id: 'q4',
+      type: 'select',
+      label: 'How much money do you want?',
       required: false,
+      options: ['1 Lakh', '2 Lakhs'],
       conditions: [
-        { field: 'q1', value: 'Yes' }
+        { field: 'q3', value: 'Yes' }
       ]
     }
   ]
@@ -69,13 +77,29 @@ export const defaultFormSchema = {
 
 export const evaluateConditions = (field, formData) => {
   if (!field.conditions || field.conditions.length === 0) {
-    return true;
+    return true; // Show fields with no conditions
   }
 
-  return field.conditions.every(condition => {
+  const result = field.conditions.every(condition => {
     const fieldValue = formData[condition.field];
+    console.log(`Evaluating condition for field ${field.id}:`, {
+      conditionField: condition.field,
+      conditionValue: condition.value,
+      currentFieldValue: fieldValue
+    });
+    // If the field has no response or is empty, hide conditional fields
+    if (fieldValue === undefined || fieldValue === null || fieldValue === '') {
+      return false;
+    }
+    // For multipleChoice (array-based), check if the condition value is included
+    if (Array.isArray(fieldValue)) {
+      return fieldValue.includes(condition.value);
+    }
+    // For select, radio, text, etc., compare directly
     return fieldValue === condition.value;
   });
+
+  return result;
 };
 
 export const getAvailableFieldsForConditions = (fields, currentFieldId) => {
