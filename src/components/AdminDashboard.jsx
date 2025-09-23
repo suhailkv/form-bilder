@@ -3,9 +3,6 @@ import {
   AppBar,
   Toolbar,
   Typography,
-  Button,
-  Tabs,
-  Tab,
   Box,
   Paper,
   Grid,
@@ -17,24 +14,38 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
-  DialogActions
+  DialogActions,
+  Button,
+  Tabs,
+  Tab,
+  Menu,
+  MenuItem
 } from "@mui/material";
-import { Assignment, TrendingUp, CloudUpload } from "@mui/icons-material";
+import { Assignment, TrendingUp } from "@mui/icons-material";
 import fields from "../data/fields.json";
 import responsesJson from "../data/responses.json";
-import { exportToCsv } from "../utils/exportCsv";
+import { exportToCsv, exportToExcel, exportToPdf } from "../utils/exportCsv";
 
 const AdminDashboard = () => {
   const [tab, setTab] = useState(1);
   const [responses, setResponses] = useState([]);
   const [selectedSubmission, setSelectedSubmission] = useState(null);
 
+  // Export Menu state
+  const [anchorEl, setAnchorEl] = useState(null);
+  const open = Boolean(anchorEl);
+  const handleMenuClick = (event) => setAnchorEl(event.currentTarget);
+  const handleMenuClose = () => setAnchorEl(null);
+  const handleExport = (type) => {
+    if (type === "csv") exportToCsv(fields, responses);
+    if (type === "excel") exportToExcel(fields, responses);
+    if (type === "pdf") exportToPdf(fields, responses);
+    handleMenuClose();
+  };
+
   useEffect(() => {
     setResponses(responsesJson);
   }, []);
-
-  const handleChange = (event, newValue) => setTab(newValue);
-  const handleExport = () => exportToCsv(responses);
 
   const totalSubmissions = responses.length;
   const todaySubmissions = responses.filter(r => {
@@ -45,6 +56,7 @@ const AdminDashboard = () => {
 
   return (
     <Box sx={{ fontFamily: "Roboto", bgcolor: "#f8f5fc", minHeight: "100vh" }}>
+      {/* Topbar */}
       <AppBar position="static" elevation={0} sx={{ bgcolor: "white", color: "black" }}>
         <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
           <Typography variant="h6" sx={{ fontWeight: 500 }}>Untitled Form</Typography>
@@ -52,7 +64,7 @@ const AdminDashboard = () => {
         </Toolbar>
         <Tabs
           value={tab}
-          onChange={handleChange}
+          onChange={(e, newValue) => setTab(newValue)}
           centered
           textColor="secondary"
           indicatorColor="secondary"
@@ -65,24 +77,31 @@ const AdminDashboard = () => {
 
       <Box p={3}>
         {tab === 1 && (
-          <Box sx={{ maxWidth: 1000, mx: "auto" }}>
+          <Box sx={{ maxWidth: 800, mx: "auto" }}>
             {/* Export & Stats */}
             <Paper elevation={1} sx={{ p: 2, mb: 2, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <Typography variant="h6">{totalSubmissions} submissions</Typography>
+
+              {/* Export Button with Menu */}
               <Button
                 variant="outlined"
-                startIcon={<CloudUpload />}
+                onClick={handleMenuClick}
                 sx={{ textTransform: "none", fontWeight: 500 }}
-                onClick={handleExport}
                 disabled={totalSubmissions === 0}
               >
                 EXPORT ALL DATA
               </Button>
+              <Menu anchorEl={anchorEl} open={open} onClose={handleMenuClose}>
+                <MenuItem onClick={() => handleExport("csv")}>CSV</MenuItem>
+                <MenuItem onClick={() => handleExport("excel")}>Excel</MenuItem>
+                <MenuItem onClick={() => handleExport("pdf")}>PDF</MenuItem>
+              </Menu>
             </Paper>
 
+            {/* Stats Cards */}
             <Paper sx={{ p: 2, mb: 3 }} elevation={2}>
               <Grid container spacing={2}>
-                {[ 
+                {[
                   { label: "Total Submissions", value: totalSubmissions, icon: <Assignment sx={{ color: "primary.main" }} /> },
                   { label: "Today's Submissions", value: todaySubmissions, icon: <TrendingUp sx={{ color: "green" }} /> }
                 ].map((stat, idx) => (
@@ -113,19 +132,22 @@ const AdminDashboard = () => {
                     <TableRow sx={{ backgroundColor: "#f0f0f0" }}>
                       <TableCell align="center" sx={{ fontWeight: 600 }}>ID</TableCell>
                       <TableCell align="center" sx={{ fontWeight: 600 }}>Status</TableCell>
-                      <TableCell align="center" sx={{ fontWeight: 600 }}>Timestamp</TableCell>
+                      <TableCell align="center" sx={{ fontWeight: 600 }}>Date/Time</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {responses.map((resp) => (
-                      <TableRow key={resp.id} sx={{ "&:nth-of-type(odd)": { backgroundColor: "#fafafa" }, "&:hover": { backgroundColor: "#e0e0e0", cursor: "pointer" } }}>
-                        <TableCell align="center">{resp.id}</TableCell>
+                    {responses.map((resp, idx) => (
+                      <TableRow
+                        key={idx}
+                        sx={{ "&:nth-of-type(odd)": { backgroundColor: "#fafafa" }, "&:hover": { backgroundColor: "#e0e0e0", cursor: "pointer" } }}
+                      >
+                        <TableCell align="center">{idx + 1}</TableCell>
                         <TableCell
                           align="center"
                           sx={{ color: "blue", textDecoration: "underline", cursor: "pointer" }}
                           onClick={() => setSelectedSubmission(resp)}
                         >
-                          Submitted
+                          Submission
                         </TableCell>
                         <TableCell align="center">{new Date(resp.timestamp).toLocaleString()}</TableCell>
                       </TableRow>
@@ -139,7 +161,7 @@ const AdminDashboard = () => {
                   <DialogContent dividers>
                     {selectedSubmission && fields.map((f, idx) => (
                       <Box key={idx} sx={{ mb: 1 }}>
-                        <strong>{f.label}:</strong> {selectedSubmission.responses[f.id] || "-"}
+                        <strong>{f.label}:</strong> {selectedSubmission[f.id] || "-"}
                       </Box>
                     ))}
                     {selectedSubmission && (
