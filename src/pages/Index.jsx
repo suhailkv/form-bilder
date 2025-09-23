@@ -25,10 +25,12 @@ import FormBuilder from '../components/FormBuilder';
 import FormPreview from '../components/FormPreview';
 import FormPreviewModal from '../components/FormPreviewModal';
 import AdminPanel from '../components/AdminPanel';
+import {defaultFormSchema} from '../utils/formSchema'
+
 
 export default function Index() {
   const [darkMode, setDarkMode] = useState(false);
-  const [schema, setSchema] = useState({ fields: [] });
+  const [schema, setSchema] = useState(defaultFormSchema);
   const [activeTab, setActiveTab] = useState(0);
   const [previewModalOpen, setPreviewModalOpen] = useState(false);
 
