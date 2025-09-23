@@ -176,7 +176,7 @@ const FormPreview = ({ schema }) => {
 
       <Divider sx={{ mb: 3 }} />
 
-      {/* Form Content */}
+    
       {schema.fields.length === 0 ? (
         <Box sx={{ 
           textAlign: 'center', 
@@ -215,7 +215,7 @@ const FormPreview = ({ schema }) => {
         </form>
       )}
 
-      {/* Debug Info */}
+   
       <Box sx={{ mt: 4, p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
         <Typography variant="subtitle2" gutterBottom>
           Form Data (Debug):

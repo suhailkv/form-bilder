@@ -15,7 +15,7 @@ import {
 import { defaultFormSchema, evaluateConditions } from "../utils/formSchema";
 import FormHeader from "./FormHeader";
 
-// Generic wrapper to handle "Clear" functionality
+
 const FieldWrapper = ({ field, children, values, handleChange }) => (
   <Box sx={{ mb: 2 }}>
     {children}
@@ -68,7 +68,7 @@ export default function FormPreview1() {
         }}
       >
         <Box sx={{ width: "100%", maxWidth: 640 }}>
-          {/* Form Title */}
+
           <Paper sx={{ p: 4, mb: 3, borderTop: "10px solid #673ab7" }} elevation={3}>
             <Typography variant="h5" fontWeight={500} gutterBottom>
               {schema.title || "Untitled form"}
@@ -78,7 +78,6 @@ export default function FormPreview1() {
             </Typography>
           </Paper>
 
-          {/* Formik wrapper */}
           <Formik initialValues={initialValues} onSubmit={handleSubmit}>
             {({ values, handleChange, resetForm }) => (
               <Form>
@@ -91,7 +90,7 @@ export default function FormPreview1() {
                         </Typography>
 
                         <FieldWrapper field={field} values={values} handleChange={handleChange}>
-                          {/* Text Field */}
+
                           {field.type === "text" && (
                             <TextField
                               fullWidth
@@ -107,7 +106,7 @@ export default function FormPreview1() {
                             />
                           )}
 
-                          {/* Note Field */}
+
                           {field.type === "note" && (
                             <TextField
                               fullWidth
@@ -127,7 +126,7 @@ export default function FormPreview1() {
                             />
                           )}
 
-                          {/* Select Dropdown */}
+
                           {field.type === "select" && (
                             <FormControl fullWidth variant="standard" sx={{ mt: 1 }}>
                               <Select
@@ -153,7 +152,6 @@ export default function FormPreview1() {
                             </FormControl>
                           )}
 
-                          {/* Radio Group */}
                           {field.type === "radio" && (
                             <RadioGroup
                               name={field.id}
@@ -181,7 +179,7 @@ export default function FormPreview1() {
                     )
                 )}
 
-                {/* Submit + Clear Form */}
+             
                 <Box display="flex" justifyContent="space-between" alignItems="center" mt={3}>
                   <Button
                     type="submit"
@@ -212,14 +210,9 @@ export default function FormPreview1() {
                   </Button>
                 </Box>
 
-                {/* Footer */}
+
                 <Box mt={6} textAlign="center" color="text.secondary" fontSize="0.85rem">
-                  <Typography
-                    variant="body2"
-                    sx={{ fontFamily: "Roboto, Arial, sans-serif" }}
-                  >
-                    This content is neither created nor endorsed by Interval. –{" "}
-                  </Typography>
+
                   <Typography
                     variant="body2"
                     mt={2}
