@@ -23,7 +23,7 @@ const FormPreview = ({ schema }) => {
   const [formData, setFormData] = useState({});
   const [visibleFields, setVisibleFields] = useState([]);
 
-  // Update visible fields when schema or form data changes
+ 
   useEffect(() => {
     const visible = schema.fields.filter(field => 
       evaluateConditions(field, formData)
@@ -41,7 +41,7 @@ const FormPreview = ({ schema }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     
-    // Validate required fields
+  
     const requiredFields = visibleFields.filter(field => field.required);
     const missingFields = requiredFields.filter(field => 
       !formData[field.id] || formData[field.id] === ''
@@ -52,7 +52,7 @@ const FormPreview = ({ schema }) => {
       return;
     }
 
-    // Show form data
+
     alert(`Form submitted!\n\nData:\n${JSON.stringify(formData, null, 2)}`);
   };
 
