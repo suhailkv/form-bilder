@@ -15,6 +15,7 @@
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
     "@hookform/resolvers": "^3.9.0",
+    "@iconify/react": "^6.0.2",
     "@mui/icons-material": "^7.3.2",
     "@mui/material": "^7.3.2",
     "@radix-ui/react-accordion": "^1.2.0",
@@ -51,6 +52,7 @@
     "cmdk": "^1.0.0",
     "date-fns": "^3.6.0",
     "embla-carousel-react": "^8.3.0",
+    "formik": "^2.4.6",
     "framer-motion": "^11.0.0",
     "input-otp": "^1.2.4",
     "lucide-react": "^0.462.0",
@@ -70,6 +72,7 @@
     "tailwindcss-animate": "^1.0.7",
     "uuid": "^10.0.0",
     "vaul": "^1.1.2",
+    "yup": "^1.7.0",
     "zod": "^3.23.8",
     "zustand": "^4.5.0"
   },

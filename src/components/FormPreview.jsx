@@ -1,231 +1,232 @@
-import React, { useState, useEffect } from 'react';
+import { Formik, Form } from "formik";
 import {
   Box,
-  Paper,
   Typography,
   TextField,
-  FormControl,
-  InputLabel,
   Select,
   MenuItem,
-  FormControlLabel,
-  Checkbox,
-  Radio,
+  FormControl,
   RadioGroup,
-  FormLabel,
+  FormControlLabel,
+  Radio,
   Button,
-  Divider,
-  Alert
-} from '@mui/material';
-import { evaluateConditions } from '../utils/formSchema';
+  Paper,
+} from "@mui/material";
+import { defaultFormSchema, evaluateConditions } from "../utils/formSchema";
+import FormHeader from "./FormHeader";
 
-const FormPreview = ({ schema }) => {
-  const [formData, setFormData] = useState({});
-  const [visibleFields, setVisibleFields] = useState([]);
 
-  // Update visible fields when schema or form data changes
-  useEffect(() => {
-    const visible = schema.fields.filter(field => 
-      evaluateConditions(field, formData)
-    );
-    setVisibleFields(visible);
-  }, [schema.fields, formData]);
+const FieldWrapper = ({ field, children, values, handleChange }) => (
+  <Box sx={{ mb: 2 }}>
+    {children}
+    {values[field.id] && (
+      <Box display="flex" justifyContent="flex-end" mt={1}>
+        <Button
+          size="small"
+          variant="text"
+          onClick={() =>
+            handleChange({ target: { name: field.id, value: "" } })
+          }
+          sx={{
+            textTransform: "none",
+            fontSize: "0.85rem",
+            color: "text.secondary",
+            fontFamily: "Roboto, Arial, sans-serif",
+          }}
+        >
+          Clear
+        </Button>
+      </Box>
+    )}
+  </Box>
+);
 
-  const handleFieldChange = (fieldId, value) => {
-    setFormData(prev => ({
-      ...prev,
-      [fieldId]: value
-    }));
+export default function FormPreview1() {
+  const schema = defaultFormSchema;
+
+  const initialValues = schema.fields.reduce((acc, field) => {
+    acc[field.id] = "";
+    return acc;
+  }, {});
+
+  const handleSubmit = (values) => {
+    alert("Form submitted:\n" + JSON.stringify(values, null, 2));
   };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    
-    // Validate required fields
-    const requiredFields = visibleFields.filter(field => field.required);
-    const missingFields = requiredFields.filter(field => 
-      !formData[field.id] || formData[field.id] === ''
-    );
-
-    if (missingFields.length > 0) {
-      alert(`Please fill in required fields: ${missingFields.map(f => f.label).join(', ')}`);
-      return;
-    }
-
-    // Show form data
-    alert(`Form submitted!\n\nData:\n${JSON.stringify(formData, null, 2)}`);
-  };
-
-  const renderField = (field) => {
-    const value = formData[field.id] || '';
-
-    switch (field.type) {
-      case 'text':
-        return (
-          <TextField
-            fullWidth
-            label={field.label}
-            placeholder={field.placeholder}
-            value={value}
-            onChange={(e) => handleFieldChange(field.id, e.target.value)}
-            required={field.required}
-            sx={{ mb: 2 }}
-          />
-        );
-
-      case 'number':
-        return (
-          <TextField
-            fullWidth
-            type="number"
-            label={field.label}
-            placeholder={field.placeholder}
-            value={value}
-            onChange={(e) => handleFieldChange(field.id, e.target.value)}
-            required={field.required}
-            inputProps={{
-              min: field.min || undefined,
-              max: field.max || undefined
-            }}
-            sx={{ mb: 2 }}
-          />
-        );
-
-      case 'select':
-        return (
-          <FormControl fullWidth sx={{ mb: 2 }}>
-            <InputLabel>{field.label}</InputLabel>
-            <Select
-              value={value}
-              label={field.label}
-              onChange={(e) => handleFieldChange(field.id, e.target.value)}
-              required={field.required}
-            >
-              <MenuItem value="">
-                <em>Select an option</em>
-              </MenuItem>
-              {field.options?.map((option, index) => (
-                <MenuItem key={index} value={option}>
-                  {option}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        );
-
-      case 'radio':
-        return (
-          <FormControl component="fieldset" sx={{ mb: 2 }}>
-            <FormLabel component="legend">{field.label}</FormLabel>
-            <RadioGroup
-              value={value}
-              onChange={(e) => handleFieldChange(field.id, e.target.value)}
-            >
-              {field.options?.map((option, index) => (
-                <FormControlLabel
-                  key={index}
-                  value={option}
-                  control={<Radio />}
-                  label={option}
-                />
-              ))}
-            </RadioGroup>
-          </FormControl>
-        );
-
-      case 'checkbox':
-        return (
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={value === true || value === 'true'}
-                onChange={(e) => handleFieldChange(field.id, e.target.checked)}
-              />
-            }
-            label={field.label}
-            sx={{ mb: 2, display: 'block' }}
-          />
-        );
-
-      default:
-        return null;
-    }
-  };
-
-  const hiddenFieldsCount = schema.fields.length - visibleFields.length;
 
   return (
-    <Paper sx={{ p: 3, height: '100%', overflow: 'auto' }}>
-      {/* Form Header */}
-      <Box sx={{ mb: 3 }}>
-        <Typography variant="h4" gutterBottom>
-          {schema.title || 'Untitled Form'}
-        </Typography>
-        {schema.description && (
-          <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
-            {schema.description}
-          </Typography>
-        )}
-        
-        {hiddenFieldsCount > 0 && (
-          <Alert severity="info" sx={{ mb: 2 }}>
-            {hiddenFieldsCount} field(s) are hidden due to conditional logic
-          </Alert>
-        )}
-      </Box>
+    <>
+      <FormHeader />
 
-      <Divider sx={{ mb: 3 }} />
+      <Box
+        sx={{
+          minHeight: "100vh",
+          bgcolor: "#f1ebf9",
+          py: 4,
+          display: "flex",
+          justifyContent: "center",
+          fontFamily: "Roboto, Arial, sans-serif",
+        }}
+      >
+        <Box sx={{ width: "100%", maxWidth: 640 }}>
 
-      {/* Form Content */}
-      {schema.fields.length === 0 ? (
-        <Box sx={{ 
-          textAlign: 'center', 
-          py: 6, 
-          color: 'text.secondary',
-          border: '2px dashed #e0e0e0',
-          borderRadius: 1
-        }}>
-          <Typography variant="h6" sx={{ mb: 1 }}>
-            No fields to preview
-          </Typography>
-          <Typography variant="body2">
-            Add fields in the builder to see the preview
-          </Typography>
+          <Paper sx={{ p: 4, mb: 3, borderTop: "10px solid #673ab7" }} elevation={3}>
+            <Typography variant="h5" fontWeight={500} gutterBottom>
+              {schema.title || "Untitled form"}
+            </Typography>
+            <Typography variant="body1" color="text.secondary">
+              {schema.description || ""}
+            </Typography>
+          </Paper>
+
+          <Formik initialValues={initialValues} onSubmit={handleSubmit}>
+            {({ values, handleChange, resetForm }) => (
+              <Form>
+                {schema.fields.map(
+                  (field) =>
+                    evaluateConditions(field, values) && (
+                      <Paper key={field.id} sx={{ p: 3, mb: 2 }} elevation={1}>
+                        <Typography gutterBottom fontWeight={400} fontSize="16px">
+                          {field.label}
+                        </Typography>
+
+                        <FieldWrapper field={field} values={values} handleChange={handleChange}>
+
+                          {field.type === "text" && (
+                            <TextField
+                              fullWidth
+                              name={field.id}
+                              placeholder={field.placeholder || ""}
+                              value={values[field.id]}
+                              onChange={handleChange}
+                              variant="standard"
+                              InputProps={{
+                                style: { fontSize: 16, fontFamily: "Roboto, Arial, sans-serif" },
+                              }}
+                              sx={{ mt: 1 }}
+                            />
+                          )}
+
+
+                          {field.type === "note" && (
+                            <TextField
+                              fullWidth
+                              name={field.id}
+                              value={values[field.id]}
+                              onChange={handleChange}
+                              placeholder={field.label}
+                              variant="standard"
+                              InputProps={{
+                                style: {
+                                  fontSize: 16,
+                                  fontFamily: "Roboto, Arial, sans-serif",
+                                  fontStyle: "italic",
+                                },
+                              }}
+                              sx={{ mt: 1 }}
+                            />
+                          )}
+
+
+                          {field.type === "select" && (
+                            <FormControl fullWidth variant="standard" sx={{ mt: 1 }}>
+                              <Select
+                                name={field.id}
+                                value={values[field.id]}
+                                onChange={handleChange}
+                                displayEmpty
+                                inputProps={{ "aria-label": field.label }}
+                                sx={{
+                                  fontFamily: "Roboto, Arial, sans-serif",
+                                  fontSize: 16,
+                                }}
+                              >
+                                <MenuItem value="">
+                                  <em>Select an option</em>
+                                </MenuItem>
+                                {field.options.map((opt, i) => (
+                                  <MenuItem key={i} value={opt}>
+                                    {opt}
+                                  </MenuItem>
+                                ))}
+                              </Select>
+                            </FormControl>
+                          )}
+
+                          {field.type === "radio" && (
+                            <RadioGroup
+                              name={field.id}
+                              value={values[field.id]}
+                              onChange={handleChange}
+                              sx={{ mt: 1 }}
+                            >
+                              {field.options.map((opt, i) => (
+                                <FormControlLabel
+                                  key={i}
+                                  value={opt}
+                                  control={<Radio sx={{ color: "#673ab7" }} />}
+                                  label={opt}
+                                  sx={{
+                                    fontFamily: "Roboto, Arial, sans-serif",
+                                    fontSize: 16,
+                                    ml: 0,
+                                  }}
+                                />
+                              ))}
+                            </RadioGroup>
+                          )}
+                        </FieldWrapper>
+                      </Paper>
+                    )
+                )}
+
+             
+                <Box display="flex" justifyContent="space-between" alignItems="center" mt={3}>
+                  <Button
+                    type="submit"
+                    variant="contained"
+                    sx={{
+                      bgcolor: "#673ab7",
+                      "&:hover": { bgcolor: "#5e35b1" },
+                      textTransform: "none",
+                      fontFamily: "Roboto, Arial, sans-serif",
+                      fontWeight: 500,
+                      fontSize: 16,
+                    }}
+                  >
+                    Submit
+                  </Button>
+
+                  <Button
+                    variant="text"
+                    onClick={() => resetForm()}
+                    sx={{
+                      textTransform: "none",
+                      fontSize: 15,
+                      color: "text.secondary",
+                      fontFamily: "Roboto, Arial, sans-serif",
+                    }}
+                  >
+                    Clear form
+                  </Button>
+                </Box>
+
+
+                <Box mt={6} textAlign="center" color="text.secondary" fontSize="0.85rem">
+
+                  <Typography
+                    variant="body2"
+                    mt={2}
+                    fontWeight={500}
+                    sx={{ fontFamily: "Roboto, Arial, sans-serif" }}
+                  >
+                    Interval Forms
+                  </Typography>
+                </Box>
+              </Form>
+            )}
+          </Formik>
         </Box>
-      ) : (
-        <form onSubmit={handleSubmit}>
-          {visibleFields.map((field) => (
-            <Box key={field.id}>
-              {renderField(field)}
-            </Box>
-          ))}
-
-          {visibleFields.length > 0 && (
-            <Box sx={{ mt: 3, pt: 2, borderTop: '1px solid #e0e0e0' }}>
-              <Button
-                type="submit"
-                variant="contained"
-                size="large"
-                fullWidth
-              >
-                Submit Form
-              </Button>
-            </Box>
-          )}
-        </form>
-      )}
-
-      {/* Debug Info */}
-      <Box sx={{ mt: 4, p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
-        <Typography variant="subtitle2" gutterBottom>
-          Form Data (Debug):
-        </Typography>
-        <Typography variant="body2" component="pre" sx={{ fontSize: '0.75rem' }}>
-          {JSON.stringify(formData, null, 2)}
-        </Typography>
       </Box>
-    </Paper>
+    </>
   );
-};
-
-export default FormPreview;
+}
