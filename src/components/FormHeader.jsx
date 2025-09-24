@@ -20,6 +20,7 @@ const FormHeader = ({ published = false, acceptingResponses = false }) => {
   const isSm = useMediaQuery(theme.breakpoints.down("sm"));
 
   const [anchorEl, setAnchorEl] = useState(null);
+  const [showAlert, setShowAlert] = useState(!acceptingResponses); 
   const popoverRef = useRef();
 
   const handleCopyLinkClick = () => {
@@ -120,18 +121,16 @@ const FormHeader = ({ published = false, acceptingResponses = false }) => {
           </Box>
         </Toolbar>
 
-        {!acceptingResponses && (
+      
+        {showAlert && !acceptingResponses && (
           <Alert
             severity="warning"
             sx={{
               borderRadius: 3,
-              bgcolor: "#fff8e1",
-              color: "#5d4037",
-              px: 2,
-              py: 0.8,
+              py: 1,
               mx: 2,
               mb: 2,
-              height:20,
+              height: 20,
               fontSize: isSm ? "0.7rem" : "0.9rem",
               "& .MuiAlert-message": {
                 width: "100%",
@@ -230,4 +229,6 @@ const FormHeader = ({ published = false, acceptingResponses = false }) => {
 };
 
 export default FormHeader;
+
+
 
