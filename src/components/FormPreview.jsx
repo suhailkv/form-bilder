@@ -45,7 +45,7 @@ const FieldWrapper = ({ field, children, values, handleChange }) => (
   </Box>
 );
 
-export default function FormPreview1() {
+export default function FormPreview() {
 
   const {loading,formData}=useSelector((store)=>store.form)
   const dispatch=useDispatch()
