@@ -122,62 +122,79 @@ const FormHeader = ({ published = false, acceptingResponses = false }) => {
         </Toolbar>
 
       
-        {showAlert && !acceptingResponses && (
-          <Alert
-            severity="warning"
-            sx={{
-              borderRadius: 3,
-              py: 1,
-              mx: 2,
-              mb: 2,
-              height: 20,
-              fontSize: isSm ? "0.7rem" : "0.9rem",
-              "& .MuiAlert-message": {
-                width: "100%",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                gap: 1,
-                overflow: "hidden",
-              },
-            }}
-            icon={false}
-          >
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width={20}
-                height={20}
-                viewBox="0 0 20 20"
-              >
-                <g fill="#df5600">
-                  <path d="M6.5 6a1.5 1.5 0 1 1-3 0a1.5 1.5 0 0 1 3 0m0 4a1.5 1.5 0 1 1-3 0a1.5 1.5 0 0 1 3 0m0 4a1.5 1.5 0 1 1-3 0a1.5 1.5 0 0 1 3 0"></path>
-                  <path
-                    fillRule="evenodd"
-                    d="M7.5 6a1 1 0 0 1 1-1h7a1 1 0 1 1 0 2h-7a1 1 0 0 1-1-1m0 4a1 1 0 0 1 1-1h7a1 1 0 1 1 0 2h-7a1 1 0 0 1-1-1m0 4a1 1 0 0 1 1-1h7a1 1 0 1 1 0 2h-7a1 1 0 0 1-1-1"
-                    clipRule="evenodd"
-                  ></path>
-                  <path d="M1.293 2.707a1 1 0 0 1 1.414-1.414l16 16a1 1 0 0 1-1.414 1.414z"></path>
-                </g>
-              </svg>
-              <Typography sx={{ fontSize: "inherit" }}>
-                This form isn't accepting responses.
-              </Typography>
-            </Box>
-            <Link
-              href="#"
-              underline="hover"
-              sx={{
-                fontSize: isSm ? "0.7rem" : "0.9rem",
-                color: "#14131389",
-                fontWeight: 500,
-                whiteSpace: "nowrap",
-              }}
-            >
-              Manage publish settings
-            </Link>
-          </Alert>
-        )}
+{showAlert && !acceptingResponses && (
+  <Alert
+    severity="warning"
+    sx={{
+      borderRadius: 3,
+      py: 1,
+      mx: 2,
+      mb: 2,
+      height: 20,
+      fontSize: {
+        xs: "0.5rem",   
+        sm: "0.9rem",  
+        md: "0.9rem",  
+      },
+      "& .MuiAlert-message": {
+        width: "100%",
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        gap: 1,
+        overflow: "hidden",
+      },
+    }}
+    icon={false}
+  >
+    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width={20}
+        height={20}
+        viewBox="0 0 20 20"
+      >
+        <g fill="#df5600">
+          <path d="M6.5 6a1.5 1.5 0 1 1-3 0a1.5 1.5 0 0 1 3 0m0 4a1.5 1.5 0 1 1-3 0a1.5 1.5 0 0 1 3 0m0 4a1.5 1.5 0 1 1-3 0a1.5 1.5 0 0 1 3 0"></path>
+          <path
+            fillRule="evenodd"
+            d="M7.5 6a1 1 0 0 1 1-1h7a1 1 0 1 1 0 2h-7a1 1 0 0 1-1-1m0 4a1 1 0 0 1 1-1h7a1 1 0 1 1 0 2h-7a1 1 0 0 1-1-1m0 4a1 1 0 0 1 1-1h7a1 1 0 1 1 0 2h-7a1 1 0 0 1-1-1"
+            clipRule="evenodd"
+          ></path>
+          <path d="M1.293 2.707a1 1 0 0 1 1.414-1.414l16 16a1 1 0 0 1-1.414 1.414z"></path>
+        </g>
+      </svg>
+      <Typography
+        sx={{
+          fontSize: {
+            xs: "0.5rem",  
+            sm: "0.95rem", 
+            md: "1rem",     
+          },
+        }}
+      >
+        This form isn't accepting responses.
+      </Typography>
+    </Box>
+    <Link
+      href="#"
+      underline="hover"
+      sx={{
+        fontSize: {
+          xs: "0.5rem",
+          sm: "0.95rem",
+          md: "0.9rem",
+        },
+        color: "#14131389",
+        fontWeight: 500,
+        whiteSpace: "nowrap",
+      }}
+    >
+      Manage publish settings
+    </Link>
+  </Alert>
+)}
+
       </AppBar>
 
       <Popover

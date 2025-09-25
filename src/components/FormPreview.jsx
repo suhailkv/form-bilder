@@ -14,6 +14,10 @@ import {
 } from "@mui/material";
 import { defaultFormSchema, evaluateConditions } from "../utils/formSchema";
 import FormHeader from "./FormHeader";
+import { useEffect } from "react";
+import { useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
+import { setFormData } from "../redux/features/formSlice";
 
 
 const FieldWrapper = ({ field, children, values, handleChange }) => (
@@ -42,7 +46,29 @@ const FieldWrapper = ({ field, children, values, handleChange }) => (
 );
 
 export default function FormPreview1() {
-  const schema = defaultFormSchema;
+
+  const {loading,formData}=useSelector((store)=>store.form)
+  const dispatch=useDispatch()
+
+  console.log("loading",loading);
+   console.log("formData",formData);
+   
+useEffect(() => {
+  const timer = setTimeout(() => {
+    dispatch(setFormData(defaultFormSchema));
+  }, 3000);
+  return () => clearTimeout(timer);
+}, [dispatch]);
+
+  const schema = formData;
+
+  if (!schema || !schema.fields) {
+  return (
+    <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
+      <Typography variant="h6">Loading form...</Typography>
+    </Box>
+  );
+}
 
   const initialValues = schema.fields.reduce((acc, field) => {
     acc[field.id] = "";
