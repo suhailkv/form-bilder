@@ -35,6 +35,8 @@ export default function Index() {
     description: "",
     fields: [],
     thankYouMessage: "",
+    bannerImage:""
+
   });
   // const [schema ,setSchema] = useState({})
 
@@ -107,8 +109,8 @@ export default function Index() {
           title={schema.title || "Untitled Form"}
           description={schema.description || ""}
           thankYouMessage={schema.thankYouMessage || "Thank you for your submission!"}
-          bannerImage={bannerImage} // Pass the banner image to PreviewPage
-        />
+          bannerImage={schema.bannerImage} // Pass the banner image to PreviewPage
+       />
       // <Box sx={{ position: "relative" }}>
       //   {/* ... (Preview AppBar code remains the same) */}
       //   <AppBar
