@@ -23,7 +23,6 @@ import {
 import { Icon } from "@iconify/react";
 import FormBuilder from "../components/FormBuilder";
 import AdminPanel from "../components/AdminPanel";
-import PreviewPage from "../components/PreviewPage";
 
 
 export default function Index() {
