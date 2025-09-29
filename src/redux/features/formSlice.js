@@ -5,7 +5,7 @@ const initialState={
     formData:{}
 }
 
-const API_URL = "http://localhost:5000/goals";
+const API_URL = "http://localhost:3000/api";
 export const fetchForm = createAsyncThunk("form/fetchForm   ", async (_, { getState, rejectWithValue }) => {
   try {
     const token = getState().auth.token;
