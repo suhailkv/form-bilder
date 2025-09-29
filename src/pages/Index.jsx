@@ -23,6 +23,7 @@ import {
 import { Icon } from "@iconify/react";
 import FormBuilder from "../components/FormBuilder";
 import AdminPanel from "../components/AdminPanel";
+import FromPreview from "../components/FormPreview"
 
 
 export default function Index() {
@@ -34,8 +35,9 @@ export default function Index() {
     description: "",
     fields: [],
     thankYouMessage: "",
-  });
+    bannerImage:""
 
+  });
   // const [schema ,setSchema] = useState({})
 
   //  ADD A NEW STATE FOR THE BANNER IMAGE
@@ -101,60 +103,68 @@ export default function Index() {
 
   if (showPreview) {
     return (
-      <Box sx={{ position: "relative" }}>
-        {/* ... (Preview AppBar code remains the same) */}
-        <AppBar
-          position="sticky"
-          elevation={0}
-          sx={{
-            background: "white",
-            borderBottom: "1px solid #dadce0",
-            boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-            px: { xs: 1, sm: 1.5, md: 2 },
-            py: { xs: 0.5, sm: 0.75, md: 1 },
-          }}
-        >
-          <Toolbar
-            sx={{
-              display: "flex",
-              justifyContent: "space-between",
-              minHeight: { xs: "48px !important", sm: "52px !important", md: "56px !important" },
-              alignItems: "center",
-            }}
-          >
-            <Box sx={{ display: "flex", alignItems: "center", gap: { xs: 1, sm: 1.5, md: 2 } }}>
-              <TextSnippetIcon sx={{ color: "#7049b4", fontSize: { xs: 24, sm: 26, md: 28 } }} />
-              <Box sx={{ fontSize: { xs: "0.9rem", sm: "0.95rem", md: "1rem" }, fontWeight: 500, color: "#202124" }}>
-                {schema?.title || "Untitled Form"} - Preview
-              </Box>
-            </Box>
-            <Button
-              variant="outlined"
-              onClick={handlePreviewToggle}
-              sx={{
-                color: "#7049b4",
-                borderColor: "#7049b4",
-                textTransform: "none",
-                fontSize: { xs: "0.8rem", sm: "0.85rem", md: "0.9rem" },
-                px: { xs: 1, sm: 1.5, md: 2 },
-                "&:hover": {
-                  borderColor: "#5a36a1",
-                  backgroundColor: "rgba(112, 73, 180, 0.04)",
-                },
-              }}
-            >
-              Back to Edit
-            </Button>
-          </Toolbar>
-        </AppBar>
-        <PreviewPage
+          <FromPreview
+          previewData={schema}
           questions={schema.fields || []}
           title={schema.title || "Untitled Form"}
           description={schema.description || ""}
           thankYouMessage={schema.thankYouMessage || "Thank you for your submission!"}
-          bannerImage={bannerImage} // Pass the banner image to PreviewPage
-        />
-      </Box>
+          bannerImage={schema.bannerImage} // Pass the banner image to PreviewPage
+       />
+      // <Box sx={{ position: "relative" }}>
+      //   {/* ... (Preview AppBar code remains the same) */}
+      //   <AppBar
+      //     position="sticky"
+      //     elevation={0}
+      //     sx={{
+      //       background: "white",
+      //       borderBottom: "1px solid #dadce0",
+      //       boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+      //       px: { xs: 1, sm: 1.5, md: 2 },
+      //       py: { xs: 0.5, sm: 0.75, md: 1 },
+      //     }}
+      //   >
+      //     <Toolbar
+      //       sx={{
+      //         display: "flex",
+      //         justifyContent: "space-between",
+      //         minHeight: { xs: "48px !important", sm: "52px !important", md: "56px !important" },
+      //         alignItems: "center",
+      //       }}
+      //     >
+      //       <Box sx={{ display: "flex", alignItems: "center", gap: { xs: 1, sm: 1.5, md: 2 } }}>
+      //         <TextSnippetIcon sx={{ color: "#7049b4", fontSize: { xs: 24, sm: 26, md: 28 } }} />
+      //         <Box sx={{ fontSize: { xs: "0.9rem", sm: "0.95rem", md: "1rem" }, fontWeight: 500, color: "#202124" }}>
+      //           {schema?.title || "Untitled Form"} - Preview
+      //         </Box>
+      //       </Box>
+      //       <Button
+      //         variant="outlined"
+      //         onClick={handlePreviewToggle}
+      //         sx={{
+      //           color: "#7049b4",
+      //           borderColor: "#7049b4",
+      //           textTransform: "none",
+      //           fontSize: { xs: "0.8rem", sm: "0.85rem", md: "0.9rem" },
+      //           px: { xs: 1, sm: 1.5, md: 2 },
+      //           "&:hover": {
+      //             borderColor: "#5a36a1",
+      //             backgroundColor: "rgba(112, 73, 180, 0.04)",
+      //           },
+      //         }}
+      //       >
+      //         Back to Edit
+      //       </Button>
+      //     </Toolbar>
+      //   </AppBar>
+        // <FromPreview
+        //   questions={schema.fields || []}
+        //   title={schema.title || "Untitled Form"}
+        //   description={schema.description || ""}
+        //   thankYouMessage={schema.thankYouMessage || "Thank you for your submission!"}
+        //   bannerImage={bannerImage} // Pass the banner image to PreviewPage
+        // />
+      // </Box>
     );
   }
 
