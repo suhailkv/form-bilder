@@ -27,37 +27,38 @@ const FieldWrapper = ({ field, children, values, setFieldValue }) => (
     {children}
 
     {/* Show Clear button only if there is a value */}
-    {values[field.id] &&
-      (field.type !== "checkbox" || values[field.id] === true) && (
-        <Box display="flex" justifyContent="flex-end" mt={1}>
-          <Button
-            size="small"
-            variant="text"
-            onClick={() => {
-              if (field.type === "checkbox") {
-                setFieldValue(field.id, false);
-              } else {
-                setFieldValue(field.id, "");
-              }
-            }}
-            sx={{
-              textTransform: "none",
-              fontSize: "0.85rem",
-              color: "text.secondary",
-              fontFamily: "Roboto, Arial, sans-serif",
-            }}
-          >
-            Clear
-          </Button>
-        </Box>
-      )}
+    {values[field.id] && (field.type !== "checkbox" || values[field.id] === true) && (
+      <Box display="flex" justifyContent="flex-end" mt={1}>
+        <Button
+          size="small"
+          variant="text"
+          onClick={() => {
+            if (field.type === "checkbox") {
+              setFieldValue(field.id, false);
+            } else {
+              setFieldValue(field.id, "");
+            }
+          }}
+          sx={{
+            textTransform: "none",
+            fontSize: "0.85rem",
+            color: "text.secondary",
+            fontFamily: "Roboto, Arial, sans-serif",
+          }}
+        >
+          Clear
+        </Button>
+      </Box>
+    )}
   </Box>
 );
 
-export default function FormPreview({previewData, closePreview}) {
+export default function FormPreview({ previewData }) {
   const { loading, formData } = useSelector((store) => store.form);
   const dispatch = useDispatch();
 
+  console.log("previewdata",previewData);
+  
   useEffect(() => {
     const timer = setTimeout(() => {
       dispatch(setFormData(defaultFormSchema));
@@ -65,7 +66,7 @@ export default function FormPreview({previewData, closePreview}) {
     return () => clearTimeout(timer);
   }, [dispatch]);
 
-  let schema ;
+  let schema;
   if (previewData) {
     schema = previewData;
   } else {
@@ -77,12 +78,7 @@ export default function FormPreview({previewData, closePreview}) {
     !schema || !schema.fields
       ? {}
       : schema.fields.reduce((acc, field) => {
-          acc[field.id] =
-            field.type === "checkbox"
-              ? false
-              : field.type === "multipleChoice"
-              ? []
-              : "";
+          acc[field.id] = field.type === "checkbox" ? false : field.type === "multipleChoice" ? [] : "";
           return acc;
         }, {});
 
@@ -107,12 +103,7 @@ export default function FormPreview({previewData, closePreview}) {
 
   if (!schema || !schema.fields) {
     return (
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        minHeight="100vh"
-      >
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
         <Typography variant="h6">Loading form...</Typography>
       </Box>
     );
@@ -120,8 +111,7 @@ export default function FormPreview({previewData, closePreview}) {
 
   return (
     <>
-      <FormHeader />
-      <Button onClick={closePreview}>Close Preview</Button>
+      {!previewData && <FormHeader />}
       <Box
         sx={{
           minHeight: "100vh",
@@ -133,10 +123,7 @@ export default function FormPreview({previewData, closePreview}) {
         }}
       >
         <Box sx={{ width: "100%", maxWidth: 640 }}>
-          <Paper
-            sx={{ p: 4, mb: 3, borderTop: "10px solid #673ab7" }}
-            elevation={3}
-          >
+          <Paper sx={{ p: 4, mb: 3, borderTop: "10px solid #673ab7" }} elevation={3}>
             <Typography variant="h5" fontWeight={500} gutterBottom>
               {schema?.title || "Untitled form"}
             </Typography>
@@ -155,11 +142,7 @@ export default function FormPreview({previewData, closePreview}) {
                         {field.label}
                       </Typography>
 
-                      <FieldWrapper
-                        field={field}
-                        values={formik.values}
-                        setFieldValue={formik.setFieldValue}
-                      >
+                      <FieldWrapper field={field} values={formik.values} setFieldValue={formik.setFieldValue}>
                         {field.type === "text" && (
                           <TextField
                             fullWidth
@@ -187,16 +170,8 @@ export default function FormPreview({previewData, closePreview}) {
                         )}
 
                         {field.type === "select" && (
-                          <FormControl
-                            fullWidth
-                            variant="standard"
-                            sx={{ mt: 1 }}
-                          >
-                            <Select
-                              name={field.id}
-                              value={formik.values[field.id] ?? ""}
-                              onChange={formik.handleChange}
-                            >
+                          <FormControl fullWidth variant="standard" sx={{ mt: 1 }}>
+                            <Select name={field.id} value={formik.values[field.id] ?? ""} onChange={formik.handleChange}>
                               <MenuItem value="">
                                 <em>Select an option</em>
                               </MenuItem>
@@ -209,14 +184,11 @@ export default function FormPreview({previewData, closePreview}) {
                           </FormControl>
                         )}
 
-                        {(field.type === "radio" ||
-                          field.type === "multipleChoice") && (
+                        {(field.type === "radio" || field.type === "multipleChoice") && (
                           <RadioGroup
                             name={field.id}
                             value={formik.values[field.id]}
-                            onChange={(e) =>
-                              formik.setFieldValue(field.id, e.target.value)
-                            }
+                            onChange={(e) => formik.setFieldValue(field.id, e.target.value)}
                           >
                             {field.options.map((opt, i) => (
                               <FormControlLabel
@@ -238,46 +210,25 @@ export default function FormPreview({previewData, closePreview}) {
 
                         {field.type === "checkbox" && (
                           <FormControlLabel
-                            control={
-                              <Checkbox
-                                name={field.id}
-                                checked={formik.values[field.id]}
-                                onChange={formik.handleChange}
-                              />
-                            }
+                            control={<Checkbox name={field.id} checked={formik.values[field.id]} onChange={formik.handleChange} />}
                             label={field.label}
                           />
                         )}
 
                         {field.type === "uploadFile" && (
                           <Box sx={{ mt: 1 }}>
-                            <Typography
-                              variant="body2"
-                              color="text.secondary"
-                              sx={{ mb: 1.2 }}
-                            >
-                              Upload 1 supported file: PDF, document, or image.
-                              Max {field.maxSize / 1024 / 1024} MB.
+                            <Typography variant="body2" color="text.secondary" sx={{ mb: 1.2 }}>
+                              Upload 1 supported file: PDF, document, or image. Max {field.maxSize / 1024 / 1024} MB.
                             </Typography>
 
-                            <Button
-                              variant="outlined"
-                              component="label"
-                              sx={{ textTransform: "none" }}
-                              startIcon={<UploadFileIcon />}
-                            >
+                            <Button variant="outlined" component="label" sx={{ textTransform: "none" }} startIcon={<UploadFileIcon />}>
                               {formik.values[field.id]?.name || "Add file"}
                               <input
                                 type="file"
                                 hidden
                                 name={field.id}
                                 accept={field.accept}
-                                onChange={(e) =>
-                                  formik.setFieldValue(
-                                    field.id,
-                                    e.currentTarget.files[0]
-                                  )
-                                }
+                                onChange={(e) => formik.setFieldValue(field.id, e.currentTarget.files[0])}
                               />
                             </Button>
                           </Box>
@@ -291,11 +242,7 @@ export default function FormPreview({previewData, closePreview}) {
                 <Button type="submit" variant="contained" color="primary">
                   Submit
                 </Button>
-                <Button
-                  type="reset"
-                  variant="text"
-                  onClick={formik.handleReset}
-                >
+                <Button type="reset" variant="text" onClick={formik.handleReset}>
                   Clear form
                 </Button>
               </Box>
