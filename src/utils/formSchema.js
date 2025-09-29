@@ -71,13 +71,21 @@ export const defaultFormSchema = {
       options: ["1 Lakh", "2 Lakhs"],
       conditions: [{ field: "q3", value: "Yes" }],
     },
+ {
+      id: "q1",
+      type: "multipleChoice",
+      label: "Favorite Food",
+      required: true,
+      options: ["Pizza", "Burger", "Biriyani", "Pasta", "Other"],
+      conditions: [],
+    },
     {
-      id: "q5",
+      id: "q2",
       type: "uploadFile",
-      label: "Upload your document",
+      label: "Upload Image",
       required: false,
-      accept: ".pdf,.jpg,.png",
-      maxSize: "5242880", // 5MB in bytes
+      accept: "image/*", // allow images only
+      maxSize: 5 * 1024 * 1024, // 5 MB
       conditions: [],
     },
   ],

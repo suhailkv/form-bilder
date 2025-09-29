@@ -1,4 +1,6 @@
 import { Formik, Form, useFormik, FormikProvider } from "formik";
+import UploadFileIcon from "@mui/icons-material/UploadFile";
+
 import {
   Box,
   Typography,
@@ -9,6 +11,7 @@ import {
   RadioGroup,
   FormControlLabel,
   Radio,
+  Checkbox,
   Button,
   Paper,
 } from "@mui/material";
@@ -19,28 +22,35 @@ import { useSelector, useDispatch } from "react-redux";
 import { setFormData } from "../redux/features/formSlice";
 import * as Yup from "yup";
 
-const FieldWrapper = ({ field, children, values, handleChange }) => (
+const FieldWrapper = ({ field, children, values, setFieldValue }) => (
   <Box sx={{ mb: 2 }}>
     {children}
-    {values[field.id] && (
-      <Box display="flex" justifyContent="flex-end" mt={1}>
-        <Button
-          size="small"
-          variant="text"
-          onClick={() =>
-            handleChange({ target: { name: field.id, value: "" } })
-          }
-          sx={{
-            textTransform: "none",
-            fontSize: "0.85rem",
-            color: "text.secondary",
-            fontFamily: "Roboto, Arial, sans-serif",
-          }}
-        >
-          Clear
-        </Button>
-      </Box>
-    )}
+
+    {/* Show Clear button only if there is a value */}
+    {values[field.id] &&
+      (field.type !== "checkbox" || values[field.id] === true) && (
+        <Box display="flex" justifyContent="flex-end" mt={1}>
+          <Button
+            size="small"
+            variant="text"
+            onClick={() => {
+              if (field.type === "checkbox") {
+                setFieldValue(field.id, false);
+              } else {
+                setFieldValue(field.id, "");
+              }
+            }}
+            sx={{
+              textTransform: "none",
+              fontSize: "0.85rem",
+              color: "text.secondary",
+              fontFamily: "Roboto, Arial, sans-serif",
+            }}
+          >
+            Clear
+          </Button>
+        </Box>
+      )}
   </Box>
 );
 
@@ -57,20 +67,25 @@ export default function FormPreview() {
 
   const schema = formData;
 
-  // Initial values based on schema
+  // Initial values
   const initialValues =
     !schema || !schema.fields
       ? {}
       : schema.fields.reduce((acc, field) => {
-          acc[field.id] = "";
+          acc[field.id] =
+            field.type === "checkbox"
+              ? false
+              : field.type === "multipleChoice"
+              ? []
+              : "";
           return acc;
         }, {});
 
-  // Yup validation (basic example: required fields)
+  // Validation
   const validationSchema = Yup.object(
     schema?.fields?.reduce((acc, field) => {
       if (field.required) {
-        acc[field.id] = Yup.string().required(`${field.label} is required`);
+        acc[field.id] = Yup.mixed().required(`${field.label} is required`);
       }
       return acc;
     }, {}) || {}
@@ -101,7 +116,6 @@ export default function FormPreview() {
   return (
     <>
       <FormHeader />
-
       <Box
         sx={{
           minHeight: "100vh",
@@ -138,9 +152,8 @@ export default function FormPreview() {
                       <FieldWrapper
                         field={field}
                         values={formik.values}
-                        handleChange={formik.handleChange}
+                        setFieldValue={formik.setFieldValue}
                       >
-                        {/* TEXT INPUT */}
                         {field.type === "text" && (
                           <TextField
                             fullWidth
@@ -149,56 +162,34 @@ export default function FormPreview() {
                             value={formik.values[field.id]}
                             onChange={formik.handleChange}
                             variant="standard"
-                            InputProps={{
-                              style: {
-                                fontSize: 16,
-                                fontFamily: "Roboto, Arial, sans-serif",
-                              },
-                            }}
                             sx={{ mt: 1 }}
-                            error={
-                              formik.touched[field.id] &&
-                              Boolean(formik.errors[field.id])
-                            }
-                            helperText={
-                              formik.touched[field.id] && formik.errors[field.id]
-                            }
                           />
                         )}
 
-                        {/* NOTE INPUT (italic) */}
-                        {field.type === "note" && (
+                        {field.type === "number" && (
                           <TextField
                             fullWidth
+                            type="number"
                             name={field.id}
+                            placeholder={field.placeholder || ""}
                             value={formik.values[field.id]}
                             onChange={formik.handleChange}
-                            placeholder={field.label}
                             variant="standard"
-                            InputProps={{
-                              style: {
-                                fontSize: 16,
-                                fontFamily: "Roboto, Arial, sans-serif",
-                                fontStyle: "italic",
-                              },
-                            }}
+                            inputProps={{ min: field.min, max: field.max }}
                             sx={{ mt: 1 }}
                           />
                         )}
 
-                        {/* SELECT DROPDOWN */}
                         {field.type === "select" && (
-                          <FormControl fullWidth variant="standard" sx={{ mt: 1 }}>
+                          <FormControl
+                            fullWidth
+                            variant="standard"
+                            sx={{ mt: 1 }}
+                          >
                             <Select
                               name={field.id}
-                              value={formik.values[field.id] ??""}
+                              value={formik.values[field.id] ?? ""}
                               onChange={formik.handleChange}
-                              displayEmpty
-                              inputProps={{ "aria-label": field.label }}
-                              sx={{
-                                fontFamily: "Roboto, Arial, sans-serif",
-                                fontSize: 16,
-                              }}
                             >
                               <MenuItem value="">
                                 <em>Select an option</em>
@@ -212,28 +203,78 @@ export default function FormPreview() {
                           </FormControl>
                         )}
 
-                        {/* RADIO GROUP */}
-                        {field.type === "radio" && (
+                        {(field.type === "radio" ||
+                          field.type === "multipleChoice") && (
                           <RadioGroup
                             name={field.id}
                             value={formik.values[field.id]}
-                            onChange={formik.handleChange}
-                            sx={{ mt: 1 }}
+                            onChange={(e) =>
+                              formik.setFieldValue(field.id, e.target.value)
+                            }
                           >
                             {field.options.map((opt, i) => (
                               <FormControlLabel
                                 key={i}
                                 value={opt}
-                                control={<Radio sx={{ color: "#673ab7" }} />}
+                                control={
+                                  <Radio
+                                    sx={{
+                                      color: "gray",
+                                      "&.Mui-checked": { color: "#673ab7" },
+                                    }}
+                                  />
+                                }
                                 label={opt}
-                                sx={{
-                                  fontFamily: "Roboto, Arial, sans-serif",
-                                  fontSize: 16,
-                                  ml: 0,
-                                }}
                               />
                             ))}
                           </RadioGroup>
+                        )}
+
+                        {field.type === "checkbox" && (
+                          <FormControlLabel
+                            control={
+                              <Checkbox
+                                name={field.id}
+                                checked={formik.values[field.id]}
+                                onChange={formik.handleChange}
+                              />
+                            }
+                            label={field.label}
+                          />
+                        )}
+
+                        {field.type === "uploadFile" && (
+                          <Box sx={{ mt: 1 }}>
+                            <Typography
+                              variant="body2"
+                              color="text.secondary"
+                              sx={{ mb: 1.2 }}
+                            >
+                              Upload 1 supported file: PDF, document, or image.
+                              Max {field.maxSize / 1024 / 1024} MB.
+                            </Typography>
+
+                            <Button
+                              variant="outlined"
+                              component="label"
+                              sx={{ textTransform: "none" }}
+                              startIcon={<UploadFileIcon />}
+                            >
+                              {formik.values[field.id]?.name || "Add file"}
+                              <input
+                                type="file"
+                                hidden
+                                name={field.id}
+                                accept={field.accept}
+                                onChange={(e) =>
+                                  formik.setFieldValue(
+                                    field.id,
+                                    e.currentTarget.files[0]
+                                  )
+                                }
+                              />
+                            </Button>
+                          </Box>
                         )}
                       </FieldWrapper>
                     </Paper>
@@ -244,7 +285,11 @@ export default function FormPreview() {
                 <Button type="submit" variant="contained" color="primary">
                   Submit
                 </Button>
-                <Button type="reset" variant="text" onClick={formik.handleReset}>
+                <Button
+                  type="reset"
+                  variant="text"
+                  onClick={formik.handleReset}
+                >
                   Clear form
                 </Button>
               </Box>
@@ -255,14 +300,3 @@ export default function FormPreview() {
     </>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
