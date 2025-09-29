@@ -22,12 +22,9 @@ export default function Index() {
     description: "",
     fields: [],
     thankYouMessage: "",
-    bannerImage: "",
+    bannerImage: "", // Banner image is now part of schema
   });
-  // const [schema ,setSchema] = useState({})
 
-  //  ADD A NEW STATE FOR THE BANNER IMAGE
-  const [bannerImage, setBannerImage] = useState(null);
   const [undoStack, setUndoStack] = useState([]);
   const [redoStack, setRedoStack] = useState([]);
   const [activeTab, setActiveTab] = useState(0);
@@ -36,7 +33,7 @@ export default function Index() {
   const deepClone = (obj) => JSON.parse(JSON.stringify(obj));
 
   const handleSchemaChange = (newFields, newThankYouMessage) => {
-    setUndoStack((prev) => [...prev, { schema: deepClone(schema), thankYouMessage: schema.thankYouMessage, bannerImage: bannerImage }]);
+    setUndoStack((prev) => [...prev, deepClone(schema)]);
     setRedoStack([]);
     setSchema({
       ...schema,
@@ -49,18 +46,16 @@ export default function Index() {
     if (undoStack.length === 0) return;
     const previous = undoStack[undoStack.length - 1];
     setUndoStack((prev) => prev.slice(0, prev.length - 1));
-    setRedoStack((prev) => [{ schema: deepClone(schema), thankYouMessage: schema.thankYouMessage, bannerImage: bannerImage }, ...prev]);
-    setSchema(previous.schema);
-    setBannerImage(previous.bannerImage); // Restore banner image state
+    setRedoStack((prev) => [deepClone(schema), ...prev]);
+    setSchema(previous);
   };
 
   const handleRedo = () => {
     if (redoStack.length === 0) return;
     const next = redoStack[0];
     setRedoStack((prev) => prev.slice(1));
-    setUndoStack((prev) => [{ schema: deepClone(schema), thankYouMessage: schema.thankYouMessage, bannerImage: bannerImage }, ...prev]);
-    setSchema(next.schema);
-    setBannerImage(next.bannerImage); // Restore banner image state
+    setUndoStack((prev) => [...prev, deepClone(schema)]);
+    setSchema(next);
   };
 
   const handleTabChange = (_, newValue) => setActiveTab(newValue);
@@ -69,12 +64,11 @@ export default function Index() {
   const handleDescriptionChange = (newDescription) => setSchema({ ...schema, description: newDescription });
   const handleThankYouMessageChange = (newMessage) => setSchema({ ...schema, thankYouMessage: newMessage });
 
-  //  CREATE A NEW HANDLER FOR BANNER IMAGE
+  // Updated handler for banner image - now updates schema directly
   const handleBannerImageChange = (newImage) => {
-    // Add to undo stack before state change
-    setUndoStack((prev) => [...prev, { schema: deepClone(schema), thankYouMessage: schema.thankYouMessage, bannerImage: bannerImage }]);
+    setUndoStack((prev) => [...prev, deepClone(schema)]);
     setRedoStack([]);
-    setBannerImage(newImage);
+    setSchema({ ...schema, bannerImage: newImage });
   };
 
   const handlePreviewToggle = () => {
@@ -84,7 +78,6 @@ export default function Index() {
   if (showPreview) {
     return (
       <Box sx={{ position: "relative" }}>
-        {/* ... (Preview AppBar code remains the same) */}
         <AppBar
           position="sticky"
           elevation={0}
@@ -129,16 +122,14 @@ export default function Index() {
             </Button>
           </Toolbar>
         </AppBar>
-        <FromPreview
-          previewData={schema}
-        />
+        {/* Pass the entire schema */}
+        <FromPreview previewData={schema} />
       </Box>
     );
   }
 
   return (
     <Box sx={{ flexGrow: 1, minHeight: "100vh", backgroundColor: "#efebf9" }}>
-      {/* ... (Main AppBar code remains the same) */}
       <AppBar
         position="sticky"
         elevation={0}
@@ -238,9 +229,8 @@ export default function Index() {
           centered
           sx={{ "& .MuiTab-root": { fontSize: { xs: "0.75rem", sm: "0.8rem", md: "0.9rem" } } }}
         >
-           <Tab label="Responses" />
+          <Tab label="Responses" />
           <Tab label="Questions" />
-         
         </Tabs>
       </AppBar>
       {activeTab === 1 && (
@@ -253,7 +243,7 @@ export default function Index() {
           onDescriptionChange={handleDescriptionChange}
           thankYouMessage={schema.thankYouMessage}
           onThankYouMessageChange={handleThankYouMessageChange}
-          bannerImage={bannerImage}
+          bannerImage={schema.bannerImage} // Now passing from schema
           onBannerImageChange={handleBannerImageChange}
         />
       )}
