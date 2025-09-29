@@ -54,7 +54,7 @@ const FieldWrapper = ({ field, children, values, setFieldValue }) => (
   </Box>
 );
 
-export default function FormPreview() {
+export default function FormPreview({previewData, closePreview}) {
   const { loading, formData } = useSelector((store) => store.form);
   const dispatch = useDispatch();
 
@@ -65,7 +65,12 @@ export default function FormPreview() {
     return () => clearTimeout(timer);
   }, [dispatch]);
 
-  const schema = formData;
+  let schema ;
+  if (previewData) {
+    schema = previewData;
+  } else {
+    schema = formData;
+  }
 
   // Initial values
   const initialValues =
@@ -116,6 +121,7 @@ export default function FormPreview() {
   return (
     <>
       <FormHeader />
+      <Button onClick={closePreview}>Close Preview</Button>
       <Box
         sx={{
           minHeight: "100vh",

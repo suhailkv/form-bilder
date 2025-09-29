@@ -110,6 +110,8 @@ export default function Index() {
           description={schema.description || ""}
           thankYouMessage={schema.thankYouMessage || "Thank you for your submission!"}
           bannerImage={schema.bannerImage} // Pass the banner image to PreviewPage
+          closePreview={handlePreviewToggle}
+
        />
       // <Box sx={{ position: "relative" }}>
       //   {/* ... (Preview AppBar code remains the same) */}
