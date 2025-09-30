@@ -1,231 +1,255 @@
-import React, { useState, useEffect } from 'react';
+import { Formik, Form, useFormik, FormikProvider } from "formik";
+import UploadFileIcon from "@mui/icons-material/UploadFile";
+
 import {
   Box,
-  Paper,
   Typography,
   TextField,
-  FormControl,
-  InputLabel,
   Select,
   MenuItem,
-  FormControlLabel,
-  Checkbox,
-  Radio,
+  FormControl,
   RadioGroup,
-  FormLabel,
+  FormControlLabel,
+  Radio,
+  Checkbox,
   Button,
-  Divider,
-  Alert
-} from '@mui/material';
-import { evaluateConditions } from '../utils/formSchema';
+  Paper,
+} from "@mui/material";
+import { defaultFormSchema, evaluateConditions } from "../utils/formSchema";
+import FormHeader from "./FormHeader";
+import { useEffect } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { setFormData } from "../redux/features/formSlice";
+import * as Yup from "yup";
 
-const FormPreview = ({ schema }) => {
-  const [formData, setFormData] = useState({});
-  const [visibleFields, setVisibleFields] = useState([]);
+const FieldWrapper = ({ field, children, values, setFieldValue }) => (
+  <Box sx={{ mb: 2 }}>
+    {children}
 
-  // Update visible fields when schema or form data changes
-  useEffect(() => {
-    const visible = schema.fields.filter(field => 
-      evaluateConditions(field, formData)
-    );
-    setVisibleFields(visible);
-  }, [schema.fields, formData]);
-
-  const handleFieldChange = (fieldId, value) => {
-    setFormData(prev => ({
-      ...prev,
-      [fieldId]: value
-    }));
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    
-    // Validate required fields
-    const requiredFields = visibleFields.filter(field => field.required);
-    const missingFields = requiredFields.filter(field => 
-      !formData[field.id] || formData[field.id] === ''
-    );
-
-    if (missingFields.length > 0) {
-      alert(`Please fill in required fields: ${missingFields.map(f => f.label).join(', ')}`);
-      return;
-    }
-
-    // Show form data
-    alert(`Form submitted!\n\nData:\n${JSON.stringify(formData, null, 2)}`);
-  };
-
-  const renderField = (field) => {
-    const value = formData[field.id] || '';
-
-    switch (field.type) {
-      case 'text':
-        return (
-          <TextField
-            fullWidth
-            label={field.label}
-            placeholder={field.placeholder}
-            value={value}
-            onChange={(e) => handleFieldChange(field.id, e.target.value)}
-            required={field.required}
-            sx={{ mb: 2 }}
-          />
-        );
-
-      case 'number':
-        return (
-          <TextField
-            fullWidth
-            type="number"
-            label={field.label}
-            placeholder={field.placeholder}
-            value={value}
-            onChange={(e) => handleFieldChange(field.id, e.target.value)}
-            required={field.required}
-            inputProps={{
-              min: field.min || undefined,
-              max: field.max || undefined
-            }}
-            sx={{ mb: 2 }}
-          />
-        );
-
-      case 'select':
-        return (
-          <FormControl fullWidth sx={{ mb: 2 }}>
-            <InputLabel>{field.label}</InputLabel>
-            <Select
-              value={value}
-              label={field.label}
-              onChange={(e) => handleFieldChange(field.id, e.target.value)}
-              required={field.required}
-            >
-              <MenuItem value="">
-                <em>Select an option</em>
-              </MenuItem>
-              {field.options?.map((option, index) => (
-                <MenuItem key={index} value={option}>
-                  {option}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        );
-
-      case 'radio':
-        return (
-          <FormControl component="fieldset" sx={{ mb: 2 }}>
-            <FormLabel component="legend">{field.label}</FormLabel>
-            <RadioGroup
-              value={value}
-              onChange={(e) => handleFieldChange(field.id, e.target.value)}
-            >
-              {field.options?.map((option, index) => (
-                <FormControlLabel
-                  key={index}
-                  value={option}
-                  control={<Radio />}
-                  label={option}
-                />
-              ))}
-            </RadioGroup>
-          </FormControl>
-        );
-
-      case 'checkbox':
-        return (
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={value === true || value === 'true'}
-                onChange={(e) => handleFieldChange(field.id, e.target.checked)}
-              />
+    {/* Show Clear button only if there is a value */}
+    {values[field.id] && (field.type !== "checkbox" || values[field.id] === true) && (
+      <Box display="flex" justifyContent="flex-end" mt={1}>
+        <Button
+          size="small"
+          variant="text"
+          onClick={() => {
+            if (field.type === "checkbox") {
+              setFieldValue(field.id, false);
+            } else {
+              setFieldValue(field.id, "");
             }
-            label={field.label}
-            sx={{ mb: 2, display: 'block' }}
-          />
-        );
+          }}
+          sx={{
+            textTransform: "none",
+            fontSize: "0.85rem",
+            color: "text.secondary",
+            fontFamily: "Roboto, Arial, sans-serif",
+          }}
+        >
+          Clear
+        </Button>
+      </Box>
+    )}
+  </Box>
+);
 
-      default:
-        return null;
-    }
-  };
+export default function FormPreview({ previewData }) {
+  const { loading, formData } = useSelector((store) => store.form);
+  const dispatch = useDispatch();
 
-  const hiddenFieldsCount = schema.fields.length - visibleFields.length;
+  console.log("previewdata",previewData);
+  
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      dispatch(setFormData(defaultFormSchema));
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [dispatch]);
+
+  let schema;
+  if (previewData) {
+    schema = previewData;
+  } else {
+    schema = formData;
+  }
+
+  // Initial values
+  const initialValues =
+    !schema || !schema.fields
+      ? {}
+      : schema.fields.reduce((acc, field) => {
+          acc[field.id] = field.type === "checkbox" ? false : field.type === "multipleChoice" ? [] : "";
+          return acc;
+        }, {});
+
+  // Validation
+  const validationSchema = Yup.object(
+    schema?.fields?.reduce((acc, field) => {
+      if (field.required) {
+        acc[field.id] = Yup.mixed().required(`${field.label} is required`);
+      }
+      return acc;
+    }, {}) || {}
+  );
+
+  const formik = useFormik({
+    enableReinitialize: true,
+    initialValues,
+    validationSchema,
+    onSubmit: (values) => {
+      console.log("Submitted values:", values);
+    },
+  });
+
+  if (!schema || !schema.fields) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
+        <Typography variant="h6">Loading form...</Typography>
+      </Box>
+    );
+  }
 
   return (
-    <Paper sx={{ p: 3, height: '100%', overflow: 'auto' }}>
-      {/* Form Header */}
-      <Box sx={{ mb: 3 }}>
-        <Typography variant="h4" gutterBottom>
-          {schema.title || 'Untitled Form'}
-        </Typography>
-        {schema.description && (
-          <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
-            {schema.description}
-          </Typography>
-        )}
-        
-        {hiddenFieldsCount > 0 && (
-          <Alert severity="info" sx={{ mb: 2 }}>
-            {hiddenFieldsCount} field(s) are hidden due to conditional logic
-          </Alert>
-        )}
-      </Box>
+    <>
+      {!previewData && <FormHeader />}
+      <Box
+        sx={{
+          minHeight: "100vh",
+          bgcolor: "#f1ebf9",
+          py: 4,
+          display: "flex",
+          justifyContent: "center",
+          fontFamily: "Roboto, Arial, sans-serif",
+        }}
+      >
+        <Box sx={{ width: "100%", maxWidth: 640 }}>
+          <Paper sx={{ p: 4, mb: 3, borderTop: "10px solid #673ab7" }} elevation={3}>
+            <Typography variant="h5" fontWeight={500} gutterBottom>
+              {schema?.title || "Untitled form"}
+            </Typography>
+            <Typography variant="body1" color="text.secondary">
+              {schema?.description || ""}
+            </Typography>
+          </Paper>
 
-      <Divider sx={{ mb: 3 }} />
+          <FormikProvider value={formik}>
+            <Form onSubmit={formik.handleSubmit}>
+              {schema.fields.map(
+                (field) =>
+                  evaluateConditions(field, formik.values) && (
+                    <Paper key={field.id} sx={{ p: 3, mb: 2 }} elevation={1}>
+                      <Typography gutterBottom fontWeight={400} fontSize="16px">
+                        {field.label}
+                      </Typography>
 
-      {/* Form Content */}
-      {schema.fields.length === 0 ? (
-        <Box sx={{ 
-          textAlign: 'center', 
-          py: 6, 
-          color: 'text.secondary',
-          border: '2px dashed #e0e0e0',
-          borderRadius: 1
-        }}>
-          <Typography variant="h6" sx={{ mb: 1 }}>
-            No fields to preview
-          </Typography>
-          <Typography variant="body2">
-            Add fields in the builder to see the preview
-          </Typography>
+                      <FieldWrapper field={field} values={formik.values} setFieldValue={formik.setFieldValue}>
+                        {field.type === "text" && (
+                          <TextField
+                            fullWidth
+                            name={field.id}
+                            placeholder={field.placeholder || ""}
+                            value={formik.values[field.id]}
+                            onChange={formik.handleChange}
+                            variant="standard"
+                            sx={{ mt: 1 }}
+                          />
+                        )}
+
+                        {field.type === "number" && (
+                          <TextField
+                            fullWidth
+                            type="number"
+                            name={field.id}
+                            placeholder={field.placeholder || ""}
+                            value={formik.values[field.id]}
+                            onChange={formik.handleChange}
+                            variant="standard"
+                            inputProps={{ min: field.min, max: field.max }}
+                            sx={{ mt: 1 }}
+                          />
+                        )}
+
+                        {field.type === "select" && (
+                          <FormControl fullWidth variant="standard" sx={{ mt: 1 }}>
+                            <Select name={field.id} value={formik.values[field.id] ?? ""} onChange={formik.handleChange}>
+                              <MenuItem value="">
+                                <em>Select an option</em>
+                              </MenuItem>
+                              {field.options.map((opt, i) => (
+                                <MenuItem key={i} value={opt}>
+                                  {opt}
+                                </MenuItem>
+                              ))}
+                            </Select>
+                          </FormControl>
+                        )}
+
+                        {(field.type === "radio" || field.type === "multipleChoice") && (
+                          <RadioGroup
+                            name={field.id}
+                            value={formik.values[field.id]}
+                            onChange={(e) => formik.setFieldValue(field.id, e.target.value)}
+                          >
+                            {field.options.map((opt, i) => (
+                              <FormControlLabel
+                                key={i}
+                                value={opt}
+                                control={
+                                  <Radio
+                                    sx={{
+                                      color: "gray",
+                                      "&.Mui-checked": { color: "#673ab7" },
+                                    }}
+                                  />
+                                }
+                                label={opt}
+                              />
+                            ))}
+                          </RadioGroup>
+                        )}
+
+                        {field.type === "checkbox" && (
+                          <FormControlLabel
+                            control={<Checkbox name={field.id} checked={formik.values[field.id]} onChange={formik.handleChange} />}
+                            label={field.label}
+                          />
+                        )}
+
+                        {field.type === "uploadFile" && (
+                          <Box sx={{ mt: 1 }}>
+                            <Typography variant="body2" color="text.secondary" sx={{ mb: 1.2 }}>
+                              Upload 1 supported file: PDF, document, or image. Max {field.maxSize / 1024 / 1024} MB.
+                            </Typography>
+
+                            <Button variant="outlined" component="label" sx={{ textTransform: "none" }} startIcon={<UploadFileIcon />}>
+                              {formik.values[field.id]?.name || "Add file"}
+                              <input
+                                type="file"
+                                hidden
+                                name={field.id}
+                                accept={field.accept}
+                                onChange={(e) => formik.setFieldValue(field.id, e.currentTarget.files[0])}
+                              />
+                            </Button>
+                          </Box>
+                        )}
+                      </FieldWrapper>
+                    </Paper>
+                  )
+              )}
+
+              <Box mt={3} display="flex" justifyContent="space-between">
+                <Button type="submit" variant="contained" color="primary">
+                  Submit
+                </Button>
+                <Button type="reset" variant="text" onClick={formik.handleReset}>
+                  Clear form
+                </Button>
+              </Box>
+            </Form>
+          </FormikProvider>
         </Box>
-      ) : (
-        <form onSubmit={handleSubmit}>
-          {visibleFields.map((field) => (
-            <Box key={field.id}>
-              {renderField(field)}
-            </Box>
-          ))}
-
-          {visibleFields.length > 0 && (
-            <Box sx={{ mt: 3, pt: 2, borderTop: '1px solid #e0e0e0' }}>
-              <Button
-                type="submit"
-                variant="contained"
-                size="large"
-                fullWidth
-              >
-                Submit Form
-              </Button>
-            </Box>
-          )}
-        </form>
-      )}
-
-      {/* Debug Info */}
-      <Box sx={{ mt: 4, p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
-        <Typography variant="subtitle2" gutterBottom>
-          Form Data (Debug):
-        </Typography>
-        <Typography variant="body2" component="pre" sx={{ fontSize: '0.75rem' }}>
-          {JSON.stringify(formData, null, 2)}
-        </Typography>
       </Box>
-    </Paper>
+    </>
   );
-};
-
-export default FormPreview;
+}
