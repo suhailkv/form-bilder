@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Typography,
@@ -16,14 +16,18 @@ import { DeleteOutlineOutlined } from "@mui/icons-material";
 import { getAvailableFieldsForConditions } from "../utils/formSchema";
 
 const ConditionalLogic = ({ field, allFields, onChange }) => {
-  const [conditions, setConditions] = useState(field.conditions || []);
+ const [conditions, setConditions] = useState(field.conditions || []);
   
   const theme = useTheme();
-  const isXs = useMediaQuery(theme.breakpoints.down("sm")); // <600px
-  const isSm = useMediaQuery(theme.breakpoints.between("sm", "md")); // 600px–900px
-  const isMd = useMediaQuery(theme.breakpoints.between("md", "lg")); // 900px–1200px
-  const isLg = useMediaQuery(theme.breakpoints.between("lg", "xl")); // 1200px–1536px
-  // xl is anything above 1536px
+  const isXs = useMediaQuery(theme.breakpoints.down("sm"));
+  const isSm = useMediaQuery(theme.breakpoints.between("sm", "md"));
+  const isMd = useMediaQuery(theme.breakpoints.between("md", "lg"));
+  const isLg = useMediaQuery(theme.breakpoints.between("lg", "xl"));
+
+  // Sync local state when field.conditions changes (e.g., when loading schema data)
+  useEffect(() => {
+    setConditions(field.conditions || []);
+  }, [field.conditions, field.id]);
 
   const availableFields = getAvailableFieldsForConditions(allFields, field.id);
 
@@ -33,8 +37,8 @@ const ConditionalLogic = ({ field, allFields, onChange }) => {
     if (targetField.type === "select" || targetField.type === "radio") {
       return targetField.options || [];
     }
-    if(targetField.type === 'multipleChoice'){
-      return targetField.options || [] ;
+    if (targetField.type === 'multipleChoice') {
+      return targetField.options || [];
     }
     if (targetField.type === "checkbox" || targetField.type === "uploadFile") {
       return ["true", "false"];
@@ -43,6 +47,8 @@ const ConditionalLogic = ({ field, allFields, onChange }) => {
   };
 
   const handleAddCondition = () => {
+    console.log('Adding condition, available fields:', availableFields);
+    
     const newCondition = { field: availableFields[0]?.id || "", value: "" };
     const newConditions = [...conditions, newCondition];
     setConditions(newConditions);
@@ -53,6 +59,12 @@ const ConditionalLogic = ({ field, allFields, onChange }) => {
   const handleConditionChange = (index, key, value) => {
     const newConditions = [...conditions];
     newConditions[index] = { ...newConditions[index], [key]: value };
+    
+    // If field changed, reset value
+    if (key === "field") {
+      newConditions[index].value = "";
+    }
+    
     setConditions(newConditions);
     onChange({ ...field, conditions: newConditions });
     console.log("Updated conditions for field", field.id, ":", newConditions);
@@ -65,7 +77,6 @@ const ConditionalLogic = ({ field, allFields, onChange }) => {
     console.log("Removed condition for field", field.id, ":", newConditions);
   };
 
-  // Responsive configurations
   const getResponsiveConfig = () => {
     if (isXs) {
       return {
@@ -123,7 +134,6 @@ const ConditionalLogic = ({ field, allFields, onChange }) => {
       };
     }
     
-    // xl and above
     return {
       direction: "row",
       fieldMinWidth: 250,
@@ -332,8 +342,3 @@ const ConditionalLogic = ({ field, allFields, onChange }) => {
 };
 
 export default ConditionalLogic;
-
-
-
-
-

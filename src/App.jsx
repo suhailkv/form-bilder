@@ -7,6 +7,7 @@ import NotFound from "./pages/NotFound";
 import FormPreview from "./components/FormPreview";
 import store from "./redux/store";
 import { Provider as ReduxProvider } from "react-redux";
+import QuestionBuilder from "./pages/QuestionBuilder";
 
 const queryClient = new QueryClient();
 
@@ -19,6 +20,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/preview" element={<FormPreview />} />
+            <Route path="/questions" element={<QuestionBuilder />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
