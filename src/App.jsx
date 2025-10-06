@@ -7,7 +7,10 @@ import NotFound from "./pages/NotFound";
 import FormPreview from "./components/FormPreview";
 import store from "./redux/store";
 import { Provider as ReduxProvider } from "react-redux";
-
+import QuestionBuilder from "./pages/QuestionBuilder";
+import AdminDashboard from './components/AdminDashboard';
+import ViewResponse from './components/ViewResponse';
+// import ExampleComponent from './components/ExampleComponent';
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -19,8 +22,12 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/preview" element={<FormPreview />} />
+            <Route path="/questions" element={<QuestionBuilder />} />
             <Route path="*" element={<NotFound />} />
-          </Routes>
+            <Route path="adminDash" element={<AdminDashboard/>} />
+           <Route path="viewResponse" element={<ViewResponse/>} />
+           {/* <Route path="example" element={<ExampleComponent/>} /> */}
+        </Routes>
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>

@@ -31,6 +31,7 @@ import {
   TrendingUp as TrendingUpIcon
 } from '@mui/icons-material';
 
+
 const AdminPanel = () => {
   const [submissions, setSubmissions] = useState([]);
   const [selectedSubmission, setSelectedSubmission] = useState(null);
