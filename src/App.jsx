@@ -10,6 +10,7 @@ import { Provider as ReduxProvider } from "react-redux";
 import QuestionBuilder from "./pages/QuestionBuilder";
 import AdminDashboard from './components/AdminDashboard';
 import ViewResponse from './components/ViewResponse';
+import LandingPage from "./pages/Landingpage";
 // import ExampleComponent from './components/ExampleComponent';
 const queryClient = new QueryClient();
 
@@ -20,9 +21,11 @@ const App = () => (
         <Toaster />
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<Index />} />
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/ind" element={<Index />} />
             <Route path="/preview" element={<FormPreview />} />
             <Route path="/questions" element={<QuestionBuilder />} />
+            <Route path="/questions/:formId" element={<QuestionBuilder />} />
             <Route path="*" element={<NotFound />} />
             <Route path="adminDash" element={<AdminDashboard/>} />
            <Route path="viewResponse" element={<ViewResponse/>} />
