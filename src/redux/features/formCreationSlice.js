@@ -743,6 +743,8 @@
 
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
+const backendUrl="http://172.16.3.224:5000"
+const token="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjc1MywiaWF0IjoxNzU5NzQzODg2LCJleHAiOjE3NTk4MzAyODZ9.QCP20t5DkIuU9jyA6PjsGH2N6mZMH2i5vAUWV8IxV60"
 
 /* --------------------------------------------
    1. FETCH FORM BY ID
@@ -751,7 +753,7 @@ export const fetchForm = createAsyncThunk(
   "formCreation/fetchForm",
   async (formId, { rejectWithValue }) => {
     try {
-      const response = await axios.get(`http://172.16.3.224:5000/api/forms/${formId}`);
+      const response = await axios.get(`${backendUrl}/api/forms/${formId}?token=${token}`);
       return response.data.data;
     } catch (error) {
       return rejectWithValue(
