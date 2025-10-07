@@ -21,7 +21,7 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
-            <Route path="/preview" element={<FormPreview />} />
+            <Route path="/form/:formId" element={<FormPreview />} />
             <Route path="/questions" element={<QuestionBuilder />} />
             <Route path="*" element={<NotFound />} />
             <Route path="adminDash" element={<AdminDashboard/>} />
