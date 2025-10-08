@@ -5,7 +5,7 @@ const backendUrl = "http://172.16.3.224:5000";
 
 // Dynamic token getter
 const getToken = () => localStorage.getItem('authToken') || 
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjc1MywiaWF0IjoxNzU5ODM4Nzk2LCJleHAiOjE3NTk5MjUxOTZ9.MedK26RLF5SZfipdGoAkqJrYWzPxXLIESzVlbslmH2U";
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjc1MywiaWF0IjoxNzU5OTI1ODI1LCJleHAiOjE3NjAwMTIyMjV9.RO23S6YGRaiAXoyLea1D2BSbqF0VzvASYWc-D4nFj4k";
 
 /* --------------------------------------------
    1. FETCH FORM BY ID
@@ -23,6 +23,8 @@ export const fetchForm = createAsyncThunk(
     }
   }
 );
+
+
 
 /* --------------------------------------------
    2. CREATE NEW FORM (Fixed to send filename only)
@@ -273,9 +275,9 @@ const formCreationSlice = createSlice({
         state.loading = false;
         state.schema = {
           ...initialState.schema,
-          ...action.payload,
-          fields: action.payload?.fields || [],
-          bannerImageFilename: action.payload?.bannerImage || null,
+          ...action.payload?.schema,
+          // fields: action.payload?.fields || [],
+          // bannerImageFilename: action.payload?.bannerImage || null,
         };
         
         // Set preview URL if banner exists
