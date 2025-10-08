@@ -27,10 +27,13 @@ const ViewResponse = () => {
   const { id } = useParams(); 
   const dispatch = useDispatch();
 
-  const { formResponses, loading, error } = useSelector(
+  const { formResponses, currentSchema, loading, error } = useSelector(
     (state) => state.adminForm
   );
-console.log("formresponse",formResponses)
+
+  console.log("formResponses:", formResponses);
+  console.log("currentSchema:", currentSchema);
+
   const [selectedResponse, setSelectedResponse] = useState(null);
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
@@ -54,30 +57,59 @@ console.log("formresponse",formResponses)
   };
 
   // Fetch form responses when component mounts
- useEffect(() => {
-  if (id && AUTH_TOKEN) {
-    console.log("Dispatching fetchFormResponses for form ID:", id);
-    dispatch(fetchFormResponses({ formId: id, token: AUTH_TOKEN }))
-      .unwrap()
-      .then((res) => console.log("API Success:", res))
-      .catch((err) => console.error("API Error:", err));
-  }
-}, [dispatch, id, AUTH_TOKEN]);
-
+  useEffect(() => {
+    if (id && AUTH_TOKEN) {
+      console.log("Dispatching fetchFormResponses for form ID:", id);
+      dispatch(fetchFormResponses({ formId: id, token: AUTH_TOKEN }))
+        .unwrap()
+        .then((res) => console.log("API Success:", res))
+        .catch((err) => console.error("API Error:", err));
+    }
+  }, [dispatch, id]);
 
   const columns = [
-    { field: "sl_no", headerName: "Sl No", width: 80 },
-        { field: "title", headerName: "title", width: 80 },
-    { field: "email", headerName: "Email", width: 220},
-      // valueGetter: (params) => params.row?.email || "N/A",},
-    { field: "userIP", headerName: "IP Address", width: 160 },
-    { field: "Publishet at", headerName: "Published at", width: 160 },
-    
-    
+    { 
+      field: "sl_no", 
+      headerName: "Sl No", 
+      width: 80,
+      renderCell: (params) => (
+        <Typography variant="body2">{params.value}</Typography>
+      )
+    },
+    // { 
+    //   field: "id", 
+    //   headerName: "Response ID", 
+    //   width: 120,
+    //   renderCell: (params) => (
+    //     <Typography variant="body2">{params.value}</Typography>
+    //   )
+    // },
+    { 
+      field: "email", 
+      headerName: "Email", 
+      width: 200,
+      renderCell: (params) => (
+        <Tooltip title={params.value || "No email provided"}>
+          <Typography variant="body2" sx={{ color: params.value ? "inherit" : "gray" }}>
+            {params.value || "N/A"}
+          </Typography>
+        </Tooltip>
+      )
+    },
+    { 
+      field: "userIP", 
+      headerName: "IP Address", 
+      width: 140,
+      renderCell: (params) => (
+        <Typography variant="body2" sx={{ fontFamily: "monospace" }}>
+          {params.value || "N/A"}
+        </Typography>
+      )
+    },
     {
       field: "isVerified",
       headerName: "Verified",
-      width: 120,
+      width: 100,
       renderCell: (params) => (
         <span
           style={{
@@ -88,6 +120,45 @@ console.log("formresponse",formResponses)
           {params.value ? "Yes" : "No"}
         </span>
       ),
+    },
+    { 
+      field: "userAgent", 
+      headerName: "User Agent", 
+      width: 180,
+      renderCell: (params) => (
+        <Tooltip title={params.value || "Unknown"}>
+          <Typography 
+            variant="body2" 
+            sx={{ 
+              overflow: "hidden", 
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap" 
+            }}
+          >
+            {params.value || "N/A"}
+          </Typography>
+        </Tooltip>
+      )
+    },
+    { 
+      field: "submissionToken", 
+      headerName: "Token", 
+      width: 150,
+      renderCell: (params) => (
+        <Tooltip title={params.value || ""}>
+          <Typography 
+            variant="body2" 
+            sx={{ 
+              fontFamily: "monospace",
+              fontSize: "0.75rem",
+              overflow: "hidden", 
+              textOverflow: "ellipsis" 
+            }}
+          >
+            {params.value ? params.value.substring(0, 12) + "..." : "N/A"}
+          </Typography>
+        </Tooltip>
+      )
     },
     {
       field: "view",
@@ -118,11 +189,16 @@ console.log("formresponse",formResponses)
         <Grid container justifyContent="space-between" alignItems="center">
           <Box>
             <Typography variant="h6" fontWeight={600}>
-              Responses for Form {id}
+              {currentSchema?.title || `Form ${id}`} - Responses
             </Typography>
             <Typography variant="body2" color="text.secondary">
               {rows.length} responses found
             </Typography>
+            {currentSchema?.publishedAt && (
+              <Typography variant="caption" color="text.secondary">
+                Published: {new Date(currentSchema.publishedAt).toLocaleDateString()}
+              </Typography>
+            )}
           </Box>
           <Button
             variant="outlined"
@@ -186,7 +262,7 @@ console.log("formresponse",formResponses)
             bgcolor: "white",
             borderRadius: 2,
             boxShadow: 24,
-            width: 600,
+            width: 700,
             maxHeight: "80vh",
             overflowY: "auto",
             p: 3,
@@ -198,33 +274,72 @@ console.log("formresponse",formResponses)
                 Response Details
               </Typography>
               <Divider sx={{ my: 2 }} />
-              <Typography>
-                <strong>Email:</strong> {selectedResponse.email || "N/A"}
-              </Typography>
-              <Typography>
-                <strong>IP Address:</strong> {selectedResponse.userIP || "N/A"}
-              </Typography>
-              <Typography>
-                <strong>Verified:</strong>{" "}
-                {selectedResponse.isVerified ? "Yes" : "No"}
-              </Typography>
+              
+              <Grid container spacing={2}>
+                <Grid item xs={6}>
+                  <Typography>
+                    <strong>Response ID:</strong> {selectedResponse.id}
+                  </Typography>
+                </Grid>
+                <Grid item xs={6}>
+                  <Typography>
+                    <strong>Email:</strong> {selectedResponse.email || "N/A"}
+                  </Typography>
+                </Grid>
+                <Grid item xs={6}>
+                  <Typography>
+                    <strong>IP Address:</strong> {selectedResponse.userIP || "N/A"}
+                  </Typography>
+                </Grid>
+                <Grid item xs={6}>
+                  <Typography>
+                    <strong>Verified:</strong>{" "}
+                    <span style={{ color: selectedResponse.isVerified ? "green" : "red", fontWeight: 600 }}>
+                      {selectedResponse.isVerified ? "Yes" : "No"}
+                    </span>
+                  </Typography>
+                </Grid>
+                <Grid item xs={12}>
+                  <Typography>
+                    <strong>User Agent:</strong> {selectedResponse.userAgent || "N/A"}
+                  </Typography>
+                </Grid>
+                <Grid item xs={12}>
+                  <Typography sx={{ wordBreak: "break-all" }}>
+                    <strong>Submission Token:</strong> {selectedResponse.submissionToken || "N/A"}
+                  </Typography>
+                </Grid>
+              </Grid>
+
               <Divider sx={{ my: 2 }} />
+
               <Typography variant="subtitle1" fontWeight={600}>
                 Submitted Data:
               </Typography>
               <Box sx={{ mt: 1 }}>
                 {selectedResponse.data && Object.keys(selectedResponse.data).length > 0 ? (
-                  Object.entries(selectedResponse.data).map(([key, value], i) => (
-                    <Paper
-                      key={i}
-                      sx={{ p: 1.5, mb: 1.5, bgcolor: "#f5f5f5", borderRadius: 1 }}
-                    >
-                      <Typography fontWeight={600}>{key}</Typography>
-                      <Typography sx={{ color: "#424242", mt: 0.5 }}>
-                        {Array.isArray(value) ? value.join(", ") : String(value)}
-                      </Typography>
-                    </Paper>
-                  ))
+                  Object.entries(selectedResponse.data).map(([key, value], i) => {
+                    // Skip _files object
+                    if (key === "_files") return null;
+                    
+                    return (
+                      <Paper
+                        key={i}
+                        sx={{ p: 1.5, mb: 1.5, bgcolor: "#f5f5f5", borderRadius: 1 }}
+                      >
+                        <Typography fontWeight={600} sx={{ color: "#1a237e" }}>
+                          {key}
+                        </Typography>
+                        <Typography sx={{ color: "#424242", mt: 0.5 }}>
+                          {Array.isArray(value) 
+                            ? value.join(", ") 
+                            : typeof value === "object" 
+                            ? JSON.stringify(value, null, 2) 
+                            : String(value)}
+                        </Typography>
+                      </Paper>
+                    );
+                  })
                 ) : (
                   <Typography color="text.secondary">No data found.</Typography>
                 )}

@@ -1,5 +1,16 @@
 import React, { useEffect, useState } from "react";
-import { Box, Typography, Paper, IconButton, Tooltip, Fab, AppBar, Toolbar, CircularProgress, Button } from "@mui/material";
+import {
+  Box,
+  Typography,
+  Paper,
+  IconButton,
+  Tooltip,
+  Fab,
+  AppBar,
+  Toolbar,
+  CircularProgress,
+  Button,
+} from "@mui/material";
 import { Assignment, Today, Add, Visibility, Edit, Delete } from "@mui/icons-material";
 import { DataGrid } from "@mui/x-data-grid";
 import { useDispatch, useSelector } from "react-redux";
@@ -21,7 +32,6 @@ export default function LandingPage() {
   const [logoInterval] = useState("https://www.intervaledu.com/static/web/images/logo/logo-dark.png");
   const [logoMap] = useState("https://protest.teaminterval.net/static/media/map.7dd1ec7c87cddefd09e4.gif");
 
-  // Fetch forms for current page
   useEffect(() => {
     if (AUTH_TOKEN) {
       dispatch(fetchFormsList({ token: AUTH_TOKEN, page, limit: pageSize }));
@@ -30,7 +40,8 @@ export default function LandingPage() {
 
   const totalForms = pagination.total || 0;
   const today = new Date().toDateString();
-  const todayForms = forms?.filter((f) => new Date(f.createdAt).toDateString() === today).length || 0;
+  const todayForms =
+    forms?.filter((f) => new Date(f.createdAt).toDateString() === today).length || 0;
 
   const handleDelete = (id) => {
     if (window.confirm("Are you sure you want to delete this form?")) {
@@ -45,27 +56,43 @@ export default function LandingPage() {
     { field: "title", headerName: "Form Title", width: 220 },
     { field: "description", headerName: "Description", width: 250 },
     {
-      field: "viewResponse",
-      headerName: "View Response",
-      width: 120,
-      renderCell: (params) => (
-        <Tooltip title="View Responses">
-          <IconButton onClick={() => navigate(`/viewResponse/${params.row.id}`)} sx={{ color: "#1a237e" }}>
-            <Visibility />
-          </IconButton>
-        </Tooltip>
-      ),
-    },
-    {
       field: "isPublished",
       headerName: "Published",
       width: 130,
       renderCell: (params) => {
-        const isPub = params.value === true || params.value === "true";
-        return <span style={{ color: isPub ? "green" : "red" }}>{isPub ? "Yes" : "No"}</span>;
+        const isPub = params.value === 1 || params.value === true;
+        return (
+          <span style={{ color: isPub ? "green" : "red", fontWeight: 600 }}>
+            {isPub ? "Yes" : "No"}
+          </span>
+        );
       },
     },
-
+    {
+      field: "submissionCount",
+      headerName: "Submissions",
+      width: 140,
+    },
+    {
+      field: "viewResponse",
+      headerName: "View Response",
+      width: 120,
+      renderCell: (params) => {
+        const isPub = params.row.isPublished === 1 || params.row.isPublished === true;
+        return (
+          <Tooltip title={isPub ? "View Responses" : "Form not published"}>
+            <span style={{ filter: isPub ? "none" : "blur(2px)" }}>
+              <IconButton
+                onClick={() => isPub && navigate(`/viewResponse/${params.row.id}`)}
+                sx={{ color: "#1a237e" }}
+              >
+                <Visibility />
+              </IconButton>
+            </span>
+          </Tooltip>
+        );
+      },
+    },
     {
       field: "edit",
       headerName: "Edit",
@@ -90,12 +117,10 @@ export default function LandingPage() {
         </Tooltip>
       ),
     },
-    { field: "noOfSubmission", headerName: "Submissions", width: 140 },
     {
       field: "action",
       headerName: "Copy Link",
       width: 130,
-
       renderCell: (params) => {
         const handleCopy = () => {
           const fullUrl = `${window.location.origin}/form/${params.row.formToken}`;
@@ -108,12 +133,8 @@ export default function LandingPage() {
               alert("Failed to copy link.");
             });
         };
-
         return <Button onClick={handleCopy}>Copy</Button>;
       },
-      // renderCell: (params) => {
-      //   return <Button onClick={() => navigate(`/form/${params.row.formToken}`)}> Copy</Button>;
-      // },
     },
   ];
 
