@@ -23,7 +23,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/ind" element={<Index />} />
-            <Route path="/preview" element={<FormPreview />} />
+            <Route path="/form/:formId" element={<FormPreview />} />
             <Route path="/questions" element={<QuestionBuilder />} />
             <Route path="/questions/:formId" element={<QuestionBuilder />} />
             <Route path="*" element={<NotFound />} />
