@@ -20,18 +20,22 @@ import {
 } from "@mui/icons-material";
 import { DataGrid } from "@mui/x-data-grid";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchFormsList,softDeleteForm } from "../redux/features/Adminformslice";
+import { fetchFormsList, softDeleteForm } from "../redux/features/Adminformslice";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 
-// Replace this with your real token
 const AUTH_TOKEN =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjc1MywiaWF0IjoxNzU5NzQzODg2LCJleHAiOjE3NTk4MzAyODZ9.QCP20t5DkIuU9jyA6PjsGH2N6mZMH2i5vAUWV8IxV60";
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjc1MywiaWF0IjoxNzU5ODM4Nzk2LCJleHAiOjE3NTk5MjUxOTZ9.MedK26RLF5SZfipdGoAkqJrYWzPxXLIESzVlbslmH2U";
 
 export default function LandingPage() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { forms, loading, error } = useSelector((state) => state.adminForm);
+  const { forms, loading, error, pagination } = useSelector(
+    (state) => state.adminForm
+  );
+
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   const [logoInterval] = useState(
     "https://www.intervaledu.com/static/web/images/logo/logo-dark.png"
@@ -40,45 +44,35 @@ export default function LandingPage() {
     "https://protest.teaminterval.net/static/media/map.7dd1ec7c87cddefd09e4.gif"
   );
 
-  // ✅ Fetch forms from backend when mounted
+  // Fetch forms for current page
   useEffect(() => {
     if (AUTH_TOKEN) {
-      dispatch(fetchFormsList(AUTH_TOKEN));
-    } else {
-      console.error("No authentication token found");
+      dispatch(fetchFormsList({ token: AUTH_TOKEN, page, limit: pageSize }));
     }
-  }, [dispatch]);
+  }, [dispatch, page, pageSize]);
 
-
-  // ✅ Stats
-  const totalForms = forms?.length || 0;
+  const totalForms = pagination.total || 0;
   const today = new Date().toDateString();
   const todayForms =
     forms?.filter((f) => new Date(f.createdAt).toDateString() === today)
       .length || 0;
 
-        // Delete handler
   const handleDelete = (id) => {
     if (window.confirm("Are you sure you want to delete this form?")) {
-      dispatch(softDeleteForm({ id, token: AUTH_TOKEN }));
+      dispatch(softDeleteForm({ id, token: AUTH_TOKEN })).then(() => {
+        dispatch(fetchFormsList({ token: AUTH_TOKEN, page, limit: pageSize }));
+      });
     }
   };
 
-  // ✅ DataGrid Columns
   const columns = [
     { field: "id", headerName: "Form ID", width: 120 },
     { field: "title", headerName: "Form Title", width: 220 },
     { field: "description", headerName: "Description", width: 250 },
-    // {
-    //   field: "createdAt",
-    //   headerName: "Created Date",
-    //   width: 200,
-    //   valueGetter: (params) => new Date(params.row.createdAt).toLocaleString(),
-    // },
     {
-      field: "view Response",
-      headerName: "view Response",
-      width: 80,
+      field: "viewResponse",
+      headerName: "View Response",
+      width: 120,
       renderCell: (params) => (
         <Tooltip title="View Responses">
           <IconButton
@@ -90,23 +84,22 @@ export default function LandingPage() {
         </Tooltip>
       ),
     },
- 
-    { field: "timeStamp", headerName: "Time Stamp", width: 160 },
+   {
+  field: "isPublished",
+  headerName: "Published",
+  width: 130,
+  renderCell: (params) => {
+    const isPub = params.value === true || params.value === "true";
+    return (
+      <span style={{ color: isPub ? "green" : "red" }}>
+        {isPub ? "Yes" : "No"}
+      </span>
+    );
+  },
+},
+
+
     {
-      field: "isPublished",
-      headerName: "Is Published",
-      width: 130,
-      renderCell: (params) => (
-        <span style={{ color: params.value ? "green" : "red" }}>
-          {params.value ? "Yes" : "No"}
-        </span>
-      ),
-    },
-
-
-
-
- {
       field: "edit",
       headerName: "Edit",
       width: 80,
@@ -128,9 +121,7 @@ export default function LandingPage() {
       renderCell: (params) => (
         <Tooltip title="Delete Form">
           <IconButton
-            onClick={() =>
-                 handleDelete(params.row.id)}
-             
+            onClick={() => handleDelete(params.row.id)}
             sx={{ color: "#c62828" }}
           >
             <Delete />
@@ -138,18 +129,15 @@ export default function LandingPage() {
         </Tooltip>
       ),
     },
+    { field: "noOfSubmission", headerName: "Submissions", width: 140 },
   ];
 
   return (
     <Box sx={{ bgcolor: "#f5f6fa", minHeight: "100vh", pb: 8, fontFamily: "Poppins" }}>
-      {/* ===== TOP NAVBAR ===== */}
+      {/* NAVBAR */}
       <AppBar
         position="static"
-        sx={{
-          bgcolor: "#1a237e",
-          boxShadow: "0 3px 8px rgba(0,0,0,0.2)",
-          mb: 4,
-        }}
+        sx={{ bgcolor: "#1a237e", boxShadow: "0 3px 8px rgba(0,0,0,0.2)", mb: 4 }}
       >
         <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
           <Box display="flex" alignItems="center" gap={2}>
@@ -171,7 +159,7 @@ export default function LandingPage() {
         </Toolbar>
       </AppBar>
 
-      {/* ===== COMBINED STATS BOX ===== */}
+      {/* STATS */}
       <Paper
         sx={{
           p: 3,
@@ -211,7 +199,7 @@ export default function LandingPage() {
         <Box textAlign="center" p={2}>
           <Today sx={{ fontSize: 45, color: "#00796b", mb: 1 }} />
           <Typography variant="subtitle2" color="textSecondary">
-            Today’s Forms
+            Today's Forms
           </Typography>
           <Typography variant="h4" fontWeight={700}>
             {todayForms}
@@ -219,7 +207,7 @@ export default function LandingPage() {
         </Box>
       </Paper>
 
-      {/* ===== DATAGRID SECTION ===== */}
+      {/* DATAGRID */}
       <Paper
         sx={{
           p: 3,
@@ -235,16 +223,7 @@ export default function LandingPage() {
         </Typography>
 
         {loading ? (
-          <Box
-            sx={{
-              p: 5,
-              textAlign: "center",
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              gap: 2,
-            }}
-          >
+          <Box sx={{ p: 5, textAlign: "center", display: "flex", justifyContent: "center", gap: 2 }}>
             <CircularProgress sx={{ color: "#1a237e" }} />
             <Typography>Loading forms...</Typography>
           </Box>
@@ -253,19 +232,38 @@ export default function LandingPage() {
             Failed to fetch forms: {error}
           </Typography>
         ) : (
-          <div style={{ height: 400, width: "100%" }}>
-            <DataGrid
-              rows={forms || []}
-              columns={columns}
-              getRowId={(row) => row.id}
-              pageSize={5}
-              rowsPerPageOptions={[5, 10]}
-            />
-          </div>
+          <>
+            <div style={{ height: 420, width: "100%" }}>
+              <DataGrid
+                rows={forms || []}
+                columns={columns}
+                getRowId={(row) => row.id}
+                pagination
+                paginationMode="server"
+                rowCount={pagination.total}
+                paginationModel={{
+                  page: page - 1,
+                  pageSize: pageSize,
+                }}
+                onPaginationModelChange={(model) => {
+                  setPage(model.page + 1);
+                  setPageSize(model.pageSize);
+                }}
+                pageSizeOptions={[5, 10, 20]}
+                loading={loading}
+              />
+            </div>
+            <Typography
+              variant="body2"
+              sx={{ textAlign: "right", mt: 1, color: "gray" }}
+            >
+              Page {page} of {pagination.totalPages} ({pagination.total} total forms)
+            </Typography>
+          </>
         )}
       </Paper>
 
-      {/* ===== ADD NEW FORM BUTTON ===== */}
+      {/* ADD BUTTON */}
       <Tooltip title="Create New Form">
         <Fab
           color="primary"

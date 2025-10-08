@@ -1,61 +1,45 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
-// Base URL for API - Update this to match your backend URL
 const API_BASE_URL = "http://172.16.3.224:5000/api";
-// Alternative: Use localhost if on same machine
-// const API_BASE_URL = "http://localhost:5000/api";
 
-// Create axios instance with default config
 const axiosInstance = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 10000, // 10 second timeout
+  timeout: 10000,
   withCredentials: true,
 });
 
-// Async thunk to fetch forms list with token
+// ✅ Fetch forms list (with pagination)
 export const fetchFormsList = createAsyncThunk(
   "adminForm/fetchFormsList",
-  async (token, { rejectWithValue }) => {
+  async ({ token, page = 1, limit = 10 }, { rejectWithValue }) => {
     try {
       const response = await axiosInstance.get("/forms", {
-        params: { token }, // Pass token as query parameter
+        params: { token, page, limit },
       });
-      
-      console.log("API Response:", response.data); // Debug log
-      
-      // API returns { status: "success", message: "OK", data: [...], meta: {...} }
-      // Return both data and meta
+
+      console.log("API Response:", response.data);
+
       return {
         data: response.data.data,
-        meta: response.data.meta
+        meta: response.data.meta,
       };
     } catch (error) {
-      // Better error handling
-      console.error("API Error:", error); // Debug log
-      
-      if (error.code === 'ECONNABORTED') {
-        return rejectWithValue("Request timeout - Server is not responding");
-      }
-      if (error.code === 'ERR_NETWORK') {
-        return rejectWithValue("Network error - Cannot connect to server");
-      }
+      console.error("API Error:", error);
       const message =
-        error.response?.data?.message || error.message || "Something went wrong";
+        error.response?.data?.message || error.message || "Failed to load forms";
       return rejectWithValue(message);
     }
   }
 );
 
+// ✅ Soft delete form
 export const softDeleteForm = createAsyncThunk(
   "adminForm/softDeleteForm",
   async ({ id, token }, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.delete(`/forms/${id}`, {
-        params: { token },
-      });
-      // Backend should return { success: true, message: "Deleted successfully" }
-      return id; // Return deleted ID to update state
+      await axiosInstance.delete(`/forms/${id}`, { params: { token } });
+      return id;
     } catch (error) {
       return rejectWithValue(
         error.response?.data?.message || error.message || "Delete failed"
@@ -64,11 +48,35 @@ export const softDeleteForm = createAsyncThunk(
   }
 );
 
+// ✅ Fetch responses for a specific form (WITH ERROR HANDLING)
+export const fetchFormResponses = createAsyncThunk(
+  "adminForm/fetchFormResponses",
+  async ({ formId, token }, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.get(`/forms/${formId}/submissions`, {
+        params: { token },
+      });
 
+      console.log("Form Responses API Response:", response.data);
 
-// Initial state
+      return {
+        schema: response.data.data.schema,
+        answers: response.data.data.answers,
+        meta: response.data.meta,
+      };
+    } catch (error) {
+      console.error("Form Responses API Error:", error);
+      const message =
+        error.response?.data?.message || error.message || "Failed to load responses";
+      return rejectWithValue(message);
+    }
+  }
+);
+
 const initialState = {
   forms: [],
+  formResponses: [],
+  currentSchema: null,
   pagination: {
     page: 1,
     limit: 10,
@@ -79,7 +87,6 @@ const initialState = {
   error: null,
 };
 
-// Create slice
 const adminFormSlice = createSlice({
   name: "adminForm",
   initialState,
@@ -94,50 +101,59 @@ const adminFormSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Fetch forms list
+      // Fetch forms
       .addCase(fetchFormsList.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
       .addCase(fetchFormsList.fulfilled, (state, action) => {
         state.loading = false;
-        // The API returns { data: [...], meta: {...} }
         state.forms = action.payload.data || [];
         state.pagination = {
           page: action.payload.meta?.currentPage || 1,
-          limit: 10,
+          limit: action.payload.meta?.limit || 10,
           total: action.payload.meta?.totalRecords || 0,
           totalPages: action.payload.meta?.totalPages || 1,
         };
-        console.log("Forms stored in Redux:", state.forms); // Debug log
       })
       .addCase(fetchFormsList.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
-        console.error("Redux Error:", action.payload); // Debug log
       })
 
- .addCase(softDeleteForm.pending, (state) => {
+      // Soft delete
+      .addCase(softDeleteForm.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
       .addCase(softDeleteForm.fulfilled, (state, action) => {
         state.loading = false;
-        // Remove deleted form from state
         state.forms = state.forms.filter((f) => f.id !== action.payload);
         state.pagination.total -= 1;
       })
       .addCase(softDeleteForm.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
+      })
+
+      // Fetch form responses
+      .addCase(fetchFormResponses.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+        state.formResponses = [];
+      })
+      .addCase(fetchFormResponses.fulfilled, (state, action) => {
+        state.loading = false;
+        state.formResponses = action.payload.answers || [];
+        state.currentSchema = action.payload.schema || null;
+        state.pagination.total = action.payload.meta?.totalRecords || 0;
+      })
+      .addCase(fetchFormResponses.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
       });
-
-
   },
 });
 
-// Export actions
 export const { clearError, resetForms } = adminFormSlice.actions;
-
-// Export reducer
 export default adminFormSlice.reducer;

@@ -28,7 +28,8 @@ const App = () => (
             <Route path="/questions/:formId" element={<QuestionBuilder />} />
             <Route path="*" element={<NotFound />} />
             <Route path="adminDash" element={<AdminDashboard/>} />
-           <Route path="viewResponse" element={<ViewResponse/>} />
+          <Route path="/viewresponse/:id" element={<ViewResponse />} />
+
            {/* <Route path="example" element={<ExampleComponent/>} /> */}
         </Routes>
         </BrowserRouter>
