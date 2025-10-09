@@ -2,8 +2,6 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 import { BACKEND_URL } from "../../utils/const";
 
-
-
 const axiosInstance = axios.create({
   baseURL: `${BACKEND_URL}/api`,
   timeout: 10000,
@@ -60,10 +58,11 @@ export const fetchFormResponses = createAsyncThunk(
 
       console.log("Form Responses API Response:", response.data);
 
+      // ✅ Updated structure
       return {
-        schema: response.data.data.schema,
-        answers: response.data.data.answers,
-        meta: response.data.meta,
+        answers: response.data.data || [],
+        meta: response.data.meta || {},
+        schema: response.data.schema || null, // optional
       };
     } catch (error) {
       console.error("Form Responses API Error:", error);
@@ -74,10 +73,35 @@ export const fetchFormResponses = createAsyncThunk(
   }
 );
 
+// ✅ Export form responses (NEW)
+export const exportFormResponses = createAsyncThunk(
+  "adminForm/exportFormResponses",
+  async ({ formId, token }, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.get(`/forms/${formId}/submissions/all`, {
+        params: { token },
+      });
+
+      console.log("Export API Response:", response.data);
+
+      return {
+        data: response.data.data,
+        meta: response.data.meta,
+      };
+    } catch (error) {
+      console.error("Export API Error:", error);
+      const message =
+        error.response?.data?.message || error.message || "Failed to export responses";
+      return rejectWithValue(message);
+    }
+  }
+);
+
 const initialState = {
   forms: [],
   formResponses: [],
   currentSchema: null,
+  exportData: [],
   pagination: {
     page: 1,
     limit: 10,
@@ -85,7 +109,9 @@ const initialState = {
     totalPages: 0,
   },
   loading: false,
+  exportLoading: false,
   error: null,
+  exportError: null,
 };
 
 const adminFormSlice = createSlice({
@@ -94,10 +120,14 @@ const adminFormSlice = createSlice({
   reducers: {
     clearError: (state) => {
       state.error = null;
+      state.exportError = null;
     },
     resetForms: (state) => {
       state.forms = [];
       state.pagination = initialState.pagination;
+    },
+    clearExportData: (state) => {
+      state.exportData = [];
     },
   },
   extraReducers: (builder) => {
@@ -152,9 +182,23 @@ const adminFormSlice = createSlice({
       .addCase(fetchFormResponses.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
+      })
+
+      // Export form responses
+      .addCase(exportFormResponses.pending, (state) => {
+        state.exportLoading = true;
+        state.exportError = null;
+      })
+      .addCase(exportFormResponses.fulfilled, (state, action) => {
+        state.exportLoading = false;
+        state.exportData = action.payload.data || [];
+      })
+      .addCase(exportFormResponses.rejected, (state, action) => {
+        state.exportLoading = false;
+        state.exportError = action.payload;
       });
   },
 });
 
-export const { clearError, resetForms } = adminFormSlice.actions;
+export const { clearError, resetForms, clearExportData } = adminFormSlice.actions;
 export default adminFormSlice.reducer;

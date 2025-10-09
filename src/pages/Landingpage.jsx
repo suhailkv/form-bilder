@@ -31,6 +31,7 @@ export default function LandingPage() {
 
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  
 
   const [logoInterval] = useState("https://www.intervaledu.com/static/web/images/logo/logo-dark.png");
   const [logoMap] = useState("https://protest.teaminterval.net/static/media/map.7dd1ec7c87cddefd09e4.gif");
