@@ -1,12 +1,11 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
-import { BACKEND_URL } from "../../utils/const";
+import { AUTH_TOKEN, BACKEND_URL } from "../../utils/const";
 
 
 
 // Dynamic token getter
-const getToken = () => localStorage.getItem('authToken') || 
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjc1MywiaWF0IjoxNzU5OTI1ODI1LCJleHAiOjE3NjAwMTIyMjV9.RO23S6YGRaiAXoyLea1D2BSbqF0VzvASYWc-D4nFj4k"
+const getToken = () => localStorage.getItem('authToken') ||AUTH_TOKEN 
 /* --------------------------------------------
    1. FETCH FORM BY ID
 --------------------------------------------- */

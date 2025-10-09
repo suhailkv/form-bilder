@@ -17,9 +17,8 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchFormsList, softDeleteForm } from "../redux/features/Adminformslice";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import { AUTH_TOKEN } from "../utils/const";
 
-const AUTH_TOKEN =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjc1MywiaWF0IjoxNzU5OTI1ODI1LCJleHAiOjE3NjAwMTIyMjV9.RO23S6YGRaiAXoyLea1D2BSbqF0VzvASYWc-D4nFj4k";
 
 export default function LandingPage() {
   const dispatch = useDispatch();
