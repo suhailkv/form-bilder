@@ -157,14 +157,14 @@ export default function FormPreview({ previewData }) {
           fontFamily: "Roboto, Arial, sans-serif",
         }}
       >
-        <Box sx={{ width: "100%", maxWidth: 640 }}>
-          <Paper>
+        <Box sx={{ width: "100%", maxWidth:760 }}>
+          <Paper sx={{ borderRadius: "8px" }}>
             {(previewData?.bannerImageFilename || formData?.bannerImage) && (
               <Box
                 sx={{
                   width: "100%",
                   height: { xs: 70, sm: 120, md: 200 },
-                  borderRadius: 1,
+                  borderRadius: "8px",
                   overflow: "hidden",
                   mb: 2,
                   position: "relative",
@@ -184,7 +184,7 @@ export default function FormPreview({ previewData }) {
           </Paper>
 
           <Paper
-            sx={{ p: 4, mb: 3, borderTop: "10px solid #673ab7" }}
+            sx={{ p: 4, mb: 3, borderTop: "10px solid #673ab7",borderRadius: "8px" }}
             elevation={3}
           >
             <Typography variant="h5" fontWeight={500} gutterBottom>
@@ -206,6 +206,7 @@ export default function FormPreview({ previewData }) {
                   width: "fit-content",
                   minWidth: 160,
                   bgcolor: "success.main",
+                  borderRadius: "8px"
                 }}
                 elevation={3}
               >
@@ -217,7 +218,7 @@ export default function FormPreview({ previewData }) {
                 </Typography>
               </Paper>
             ) : (
-              <Paper sx={{ p: 2, mb: 3 }}>
+              <Paper sx={{ p: 2, mb: 3,borderRadius: "8px" }}>
                 {/* Email field shown before requesting OTP */}
                 {!otpSent && (
                   <>
@@ -296,12 +297,14 @@ export default function FormPreview({ previewData }) {
               {schema.fields.map(
                 (field) =>
                   evaluateConditions(field, formik.values) && (
-                    <Paper key={field.id} sx={{ p: 3, mb: 2 }} elevation={1}>
+                    <Paper key={field.id} sx={{ p: 3, mb: 2,  color: "text.primary" }} elevation={1}>
                       {field.type !== "checkbox" && (
                         <Typography
                           gutterBottom
-                          fontWeight={400}
-                          fontSize="16px"
+                          fontWeight={500}
+                          fontSize="20px"
+                        
+                          
                         >
                           {field.label}
                         </Typography>
