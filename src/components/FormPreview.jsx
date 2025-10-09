@@ -29,7 +29,7 @@ import { evaluateConditions } from "../utils/formSchema";
 import FormHeader from "./FormHeader";
 import { useSelector, useDispatch } from "react-redux";
 import * as Yup from "yup";
-
+import { backendUrl } from "../redux/features/formCreationSlice";
 // Wrapper to add Clear button for each field
 const FieldWrapper = ({ field, children, values, setFieldValue }) => (
   <Box sx={{ mb: 2 }}>
@@ -159,7 +159,7 @@ export default function FormPreview({ previewData }) {
       >
         <Box sx={{ width: "100%", maxWidth: 640 }}>
           <Paper>
-            {(previewData?.bannerImage || formData?.bannerImage) && (
+            {(previewData?.bannerImageFilename || formData?.bannerImage) && (
               <Box
                 sx={{
                   width: "100%",
@@ -172,9 +172,9 @@ export default function FormPreview({ previewData }) {
               >
                 <img
                   src={
-                    previewData?.bannerImage
-                      ? previewData.bannerImage
-                      : `${API_URL}/uploads/temp/${formData.bannerImage}`
+                    previewData?.bannerImageFilename
+                      ?  `${backendUrl}/uploads/temp/${previewData.bannerImageFilename}`
+                      : `${backendUrl}/uploads/temp/${formData.bannerImage}`
                   }
                   alt="Banner"
                   style={{ width: "100%", height: "100%", objectFit: "cover" }}

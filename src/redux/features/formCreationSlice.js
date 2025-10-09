@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
-const backendUrl = "http://172.16.3.224:5000";
+export const backendUrl = "http://172.16.3.224:5000";
 
 // Dynamic token getter
 const getToken = () => localStorage.getItem('authToken') || 
@@ -326,8 +326,8 @@ const formCreationSlice = createSlice({
         state.schema = {
           ...initialState.schema,
           ...action.payload,
-          fields: action.payload?.fields || [],
-          bannerImageFilename: action.payload?.bannerImage || null,
+          // fields: action.payload?.fields || [],
+          // bannerImageFilename: action.payload?.bannerImage || null,
         };
         
         if (action.payload?.bannerImage) {
