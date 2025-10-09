@@ -1,10 +1,11 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
+import { BACKEND_URL } from "../../utils/const";
 
-const API_BASE_URL = "http://172.16.3.224:5000/api";
+
 
 const axiosInstance = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: `${BACKEND_URL}/api`,
   timeout: 10000,
   withCredentials: true,
 });

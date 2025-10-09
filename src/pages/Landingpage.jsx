@@ -10,6 +10,8 @@ import {
   Toolbar,
   CircularProgress,
   Button,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import { Assignment, Today, Add, Visibility, Edit, Delete } from "@mui/icons-material";
 import { DataGrid } from "@mui/x-data-grid";
@@ -17,9 +19,10 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchFormsList, softDeleteForm } from "../redux/features/Adminformslice";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import { AUTH_TOKEN } from "../utils/const";
+import { Icon } from '@iconify/react';
 
-const AUTH_TOKEN =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjc1MywiaWF0IjoxNzU5OTI1ODI1LCJleHAiOjE3NjAwMTIyMjV9.RO23S6YGRaiAXoyLea1D2BSbqF0VzvASYWc-D4nFj4k";
+
 
 export default function LandingPage() {
   const dispatch = useDispatch();
@@ -81,14 +84,15 @@ export default function LandingPage() {
         const isPub = params.row.isPublished === 1 || params.row.isPublished === true;
         return (
           <Tooltip title={isPub ? "View Responses" : "Form not published"}>
-            <span style={{ filter: isPub ? "none" : "blur(2px)" }}>
+            {/* <span style={{ filter: isPub ? "none" : "blur(2px)" }}> */}
               <IconButton
                 onClick={() => isPub && navigate(`/viewResponse/${params.row.id}`)}
                 sx={{ color: "#1a237e" }}
+                 disabled={!isPub}
               >
                 <Visibility />
               </IconButton>
-            </span>
+            {/* </span> */}
           </Tooltip>
         );
       },
@@ -117,25 +121,63 @@ export default function LandingPage() {
         </Tooltip>
       ),
     },
-    {
-      field: "action",
-      headerName: "Copy Link",
-      width: 130,
-      renderCell: (params) => {
-        const handleCopy = () => {
-          const fullUrl = `${window.location.origin}/form/${params.row.formToken}`;
-          navigator.clipboard
-            .writeText(fullUrl)
-            .then(() => {
-              alert("Link copied to clipboard!");
-            })
-            .catch(() => {
-              alert("Failed to copy link.");
-            });
-        };
-        return <Button onClick={handleCopy}>Copy</Button>;
-      },
-    },
+  {
+  field: "action",
+  headerName: "Copy Link",
+  width: 150,
+  renderCell: (params) => {
+    const [open, setOpen] = useState(false);
+    const [message, setMessage] = useState("");
+    const [severity, setSeverity] = useState("success");
+
+    const handleCopy = () => {
+      const fullUrl = `${window.location.origin}/form/${params.row.formToken}`;
+      navigator.clipboard
+        .writeText(fullUrl)
+        .then(() => {
+          setMessage("✅ Link copied to clipboard!");
+          setSeverity("success");
+          setOpen(true);
+        })
+        .catch(() => {
+          setMessage("❌ Failed to copy link!");
+          setSeverity("error");
+          setOpen(true);
+        });
+    };
+
+    return (
+      <>
+        <Button
+          onClick={handleCopy}
+          disabled={!params.row.isPublished}
+          variant="contained"
+          size="small"
+          startIcon={<Icon icon="icon-park-outline:link" width="20" height="20" />}
+        >
+          Copy
+        </Button>
+
+        {/* MUI Snackbar Alert */}
+        <Snackbar
+          open={open}
+          autoHideDuration={2000}
+          onClose={() => setOpen(false)}
+          anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        >
+          <Alert
+            onClose={() => setOpen(false)}
+            severity={severity}
+            variant="filled"
+            sx={{ width: "100%" }}
+          >
+            {message}
+          </Alert>
+        </Snackbar>
+      </>
+    );
+  },
+}
   ];
 
   return (
