@@ -1,7 +1,8 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
+import { BACKEND_URL } from "../../utils/const";
 
-export const backendUrl = "http://172.16.3.224:5000";
+
 
 // Dynamic token getter
 const getToken = () => localStorage.getItem('authToken') || 
@@ -13,7 +14,7 @@ export const fetchForm = createAsyncThunk(
   "formCreation/fetchForm",
   async (formId, { rejectWithValue }) => {
     try {
-      const response = await axios.get(`${backendUrl}/api/forms/${formId}?token=${getToken()}`);
+      const response = await axios.get(`${BACKEND_URL}/api/forms/${formId}?token=${getToken()}`);
       return response.data.data;
     } catch (error) {
       return rejectWithValue(
@@ -43,7 +44,7 @@ export const createForm = createAsyncThunk(
       
       console.log("Creating form with payload:", cleanPayload);
       const response = await axios.post(
-        `${backendUrl}/api/forms?token=${getToken()}`, 
+        `${BACKEND_URL}/api/forms?token=${getToken()}`, 
         cleanPayload
       );
       return response.data.data;
@@ -73,7 +74,7 @@ export const updateForm = createAsyncThunk(
       
       console.log("Updating form with payload:", cleanPayload);
       const response = await axios.put(
-        `${backendUrl}/api/forms/${formId}?token=${getToken()}`, 
+        `${BACKEND_URL}/api/forms/${formId}?token=${getToken()}`, 
         cleanPayload
       );
       return response.data.data;
@@ -96,7 +97,7 @@ export const uploadBannerImage = createAsyncThunk(
       const formData = new FormData();
       formData.append("file", file);
 
-      const response = await axios.post(`${backendUrl}/api/upload`, formData, {
+      const response = await axios.post(`${BACKEND_URL}/api/upload`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
@@ -120,7 +121,7 @@ export const uploadBannerImage = createAsyncThunk(
 
       if (response.data.success && storedName) {
         // Create preview URL for display
-        const imageUrl = `${backendUrl}/uploads/temp/${storedName}`;
+        const imageUrl = `${BACKEND_URL}/uploads/temp/${storedName}`;
         
         return {
           success: true,
@@ -146,7 +147,7 @@ export const deleteBannerImage = createAsyncThunk(
   "formCreation/deleteBannerImage",
   async (filename, { rejectWithValue }) => {
     try {
-      await axios.delete(`${backendUrl}/api/upload/${filename}?token=${getToken()}`);
+      await axios.delete(`${BACKEND_URL}/api/upload/${filename}?token=${getToken()}`);
       return { success: true };
     } catch (error) {
       console.error("Delete banner error:", error);
@@ -161,7 +162,7 @@ export const publishForm = createAsyncThunk(
   async (formId, { rejectWithValue }) => {
     try {
       const response = await axios.post(
-        `${backendUrl}/api/forms/${formId}/publish?token=${getToken()}`
+        `${BACKEND_URL}/api/forms/${formId}/publish?token=${getToken()}`
       );
       
       // Return the full response data
@@ -281,7 +282,7 @@ const formCreationSlice = createSlice({
         
         // Set preview URL if banner exists
         if (action.payload?.bannerImage) {
-          state.bannerImagePreviewUrl = `${backendUrl}/uploads/temp/${action.payload.bannerImage}`;
+          state.bannerImagePreviewUrl = `${BACKEND_URL}/uploads/temp/${action.payload.bannerImage}`;
         }
       })
       .addCase(fetchForm.rejected, (state, action) => {
@@ -307,7 +308,7 @@ const formCreationSlice = createSlice({
         
         // Set preview URL if banner exists
         if (action.payload?.bannerImage) {
-          state.bannerImagePreviewUrl = `${backendUrl}/uploads/temp/${action.payload.bannerImage}`;
+          state.bannerImagePreviewUrl = `${BACKEND_URL}/uploads/temp/${action.payload.bannerImage}`;
         }
       })
       .addCase(createForm.rejected, (state, action) => {
@@ -331,7 +332,7 @@ const formCreationSlice = createSlice({
         };
         
         if (action.payload?.bannerImage) {
-          state.bannerImagePreviewUrl = `${backendUrl}/uploads/temp/${action.payload.bannerImage}`;
+          state.bannerImagePreviewUrl = `${BACKEND_URL}/uploads/temp/${action.payload.bannerImage}`;
         }
       })
       .addCase(updateForm.rejected, (state, action) => {

@@ -14,8 +14,8 @@ import { Close as CloseIcon, ContentCopy as CopyIcon } from "@mui/icons-material
 import { useDispatch, useSelector } from "react-redux";
 import { useParams } from "react-router-dom"; // Add this import
 import { publishForm } from "../../redux/features/formCreationSlice";
+import { BACKEND_URL } from "../../utils/const";
 
-const backendUrl = "http://172.16.3.224:5000";
 
 export const Publish = () => {
   const dispatch = useDispatch();
@@ -47,7 +47,7 @@ export const Publish = () => {
       if (publishForm.fulfilled.match(resultAction)) {
         // Extract the encoded token from backend response if available
         const formToken = resultAction.payload?.formToken || formId;
-        const link = `${backendUrl}/api/forms/${formToken}`;
+        const link = `${BACKEND_URL}/api/forms/${formToken}`;
         setPublishedLink(link);
       }
     } catch (err) {

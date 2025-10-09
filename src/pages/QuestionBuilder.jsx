@@ -129,8 +129,7 @@ export default function QuestionBuilder() {
       });
     }
   }, [formId, dispatch]);
- 
-   console.log("hii", schema);
+
    
   // Clear success message after 3 seconds
   useEffect(() => {
