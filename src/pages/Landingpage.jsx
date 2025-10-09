@@ -19,7 +19,7 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 
 const AUTH_TOKEN =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjc1MywiaWF0IjoxNzU5ODM4Nzk2LCJleHAiOjE3NTk5MjUxOTZ9.MedK26RLF5SZfipdGoAkqJrYWzPxXLIESzVlbslmH2U";
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjc1MywiaWF0IjoxNzU5OTI1ODI1LCJleHAiOjE3NjAwMTIyMjV9.RO23S6YGRaiAXoyLea1D2BSbqF0VzvASYWc-D4nFj4k";
 
 export default function LandingPage() {
   const dispatch = useDispatch();
@@ -133,7 +133,9 @@ export default function LandingPage() {
               alert("Failed to copy link.");
             });
         };
-        return <Button onClick={handleCopy}>Copy</Button>;
+        return <Button onClick={handleCopy}
+        disabled={!params.row.isPublished}
+        >Copy</Button>;
       },
     },
   ];
