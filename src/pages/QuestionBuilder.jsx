@@ -129,7 +129,9 @@ export default function QuestionBuilder() {
       });
     }
   }, [formId, dispatch]);
-
+ 
+   console.log("hii", schema);
+   
   // Clear success message after 3 seconds
   useEffect(() => {
     if (saveSuccess) {
@@ -396,7 +398,7 @@ export default function QuestionBuilder() {
         // Navigate to the new form's URL after creation
         if (result._id || result.id) {
           const newFormId = result._id || result.id;
-          navigate(`/forms/edit/${newFormId}`, { replace: true });
+          navigate(`/`, { replace: true });
         }
       }
       setSaveSuccess(true);
