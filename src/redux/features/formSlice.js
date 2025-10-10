@@ -1,7 +1,7 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
 
-const API_URL = "http://172.16.3.224:5000";
+const API_URL = "http://172.16.3.227:5000";
 
 const initialState = {
   loading: false,
@@ -9,7 +9,7 @@ const initialState = {
   error: null,
   email: "",
   otpSent: false,
-  otpVerified: false,
+  otpVerified: true,
 };
 
 // 1️⃣ Fetch form
@@ -61,7 +61,7 @@ export const submitForm = createAsyncThunk(
   "form/submitForm",
   async ({ formId, email, data }, { rejectWithValue }) => {
     try {
-      const res = await axios.post(`${API_URL}/form/forms/${formId}/submissions`, { email, data });
+      const res = await axios.post(`${API_URL}/api/submissions/forms/${formId}/submit`, { email, data });
       return res.data;
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || err.message);
