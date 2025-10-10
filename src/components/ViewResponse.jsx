@@ -21,15 +21,16 @@ import { Visibility as VisibilityIcon, Assignment, FileDownload } from "@mui/ico
 import { useDispatch, useSelector } from "react-redux";
 import { fetchFormResponses, exportFormResponses } from "../redux/features/Adminformslice";
 import * as XLSX from "xlsx";
-import jsPDF from "jspdf";
-import "jspdf-autotable";
+import { jsPDF } from "jspdf";
+import JSPDFAutoTable from "jspdf-autotable"; // Alternative import for explicit plugin application
 import { AUTH_TOKEN } from "../utils/const";
+
 
 const ViewResponse = () => {
   const { id } = useParams();
   const dispatch = useDispatch();
 
-  const { formResponses, currentSchema, exportData, loading, exportLoading, error } =
+  const { formResponses, currentSchema, loading, exportLoading, error } =
     useSelector((state) => state.adminForm);
 
   const [selectedResponse, setSelectedResponse] = useState(null);
@@ -48,67 +49,207 @@ const ViewResponse = () => {
     }
   }, [dispatch, id]);
 
-  const flattenExportData = (data) =>
-    data.map((res, i) => {
-      const flatRow = { "Response #": i + 1 };
-      res.fields.forEach((field) => {
-        const value = Array.isArray(field.value) ? field.value.join(", ") : field.value;
-        flatRow[field.label] = value;
-      });
+  const flattenExportData = (data) => {
+    if (!Array.isArray(data) || data.length === 0) {
+      return [];
+    }
+    return data.map((responseItem, index) => {
+      const flatRow = { "Response #": index + 1 };
+
+      const fields = responseItem.fields || responseItem;
+
+      if (Array.isArray(fields)) {
+        fields.forEach((field) => {
+          let value = field.value;
+          if (Array.isArray(value)) {
+            value = value.join(", ");
+          }
+          flatRow[field.label || "Unknown"] = value || "";
+        });
+      }
+
       return flatRow;
     });
+  };
 
+  // Export to CSV
   const exportToCSV = (data) => {
-    const flatData = flattenExportData(data);
-    const headers = Object.keys(flatData[0]);
-    const csvContent = [
-      headers.join(","),
-      ...flatData.map((row) =>
-        headers.map((h) => JSON.stringify(row[h] || "")).join(",")
-      ),
-    ].join("\n");
+    try {
+      const flatData = flattenExportData(data);
 
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = `form_${id}_responses.csv`;
-    link.click();
-    handleMenuClose();
+      if (!flatData || flatData.length === 0) {
+        alert("No data available to export");
+        return;
+      }
+
+      const headers = Object.keys(flatData[0]);
+      const csvContent = [
+        headers.join(","),
+        ...flatData.map((row) =>
+          headers
+            .map((h) => {
+              const value = row[h] || "";
+              return `"${String(value).replace(/"/g, '""')}"`;
+            })
+            .join(",")
+        ),
+      ].join("\n");
+
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const link = document.createElement("a");
+      const url = URL.createObjectURL(blob);
+      link.setAttribute("href", url);
+      link.setAttribute("download", `form_${id}_responses.csv`);
+      link.style.visibility = "hidden";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      handleMenuClose();
+    } catch (error) {
+      console.error("CSV Export Error:", error.stack);
+      alert("Failed to export CSV: " + error.message);
+    }
   };
 
+  // Export to Excel
   const exportToExcel = (data) => {
-    const flatData = flattenExportData(data);
-    const ws = XLSX.utils.json_to_sheet(flatData);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Responses");
-    XLSX.writeFile(wb, `form_${id}_responses.xlsx`);
-    handleMenuClose();
+    try {
+      const flatData = flattenExportData(data);
+
+      if (!flatData || flatData.length === 0) {
+        alert("No data available to export");
+        return;
+      }
+
+      const ws = XLSX.utils.json_to_sheet(flatData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Responses");
+
+      // Set column widths
+      const maxWidth = 50;
+      const cols = Object.keys(flatData[0]).map(() => ({ wch: maxWidth }));
+      ws["!cols"] = cols;
+
+      XLSX.writeFile(wb, `form_${id}_responses.xlsx`);
+      handleMenuClose();
+    } catch (error) {
+      console.error("Excel Export Error:", error.stack);
+      alert("Failed to export Excel: " + error.message);
+    }
   };
 
+  // Export to PDF
   const exportToPDF = (data) => {
-    const flatData = flattenExportData(data);
-    const doc = new jsPDF();
-    doc.setFontSize(16);
-    doc.text(`Form ${id} - Responses`, 14, 15);
-    const headers = Object.keys(flatData[0]);
-    const rows = flatData.map((r) => headers.map((h) => r[h] || ""));
-    doc.autoTable({ head: [headers], body: rows, startY: 25 });
-    doc.save(`form_${id}_responses.pdf`);
-    handleMenuClose();
+    try {
+      const flatData = flattenExportData(data);
+
+      if (!flatData || flatData.length === 0) {
+        alert("No data available to export");
+        return;
+      }
+
+      const doc = new jsPDF({
+        orientation: "landscape",
+        unit: "mm",
+        format: "a4",
+      });
+
+      // Explicitly apply the autoTable plugin
+      JSPDFAutoTable.default(doc);
+
+      // Add title
+      doc.setFontSize(16);
+      doc.setFont(undefined, "bold");
+      doc.text(`Form ${id} - Responses`, 14, 15);
+
+      // Add metadata
+      doc.setFontSize(10);
+      doc.setFont(undefined, "normal");
+      doc.text(`Total Responses: ${flatData.length}`, 14, 22);
+      doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 27);
+
+      const headers = Object.keys(flatData[0]);
+      const rows = flatData.map((row) =>
+        headers.map((h) => {
+          const val = row[h];
+          return val !== null && val !== undefined ? String(val) : "";
+        })
+      );
+
+      // Verify autoTable is available
+      if (!doc.autoTable) {
+        console.error("autoTable is not available on jsPDF instance after applying plugin");
+        throw new Error("jspdf-autotable plugin is not properly loaded");
+      }
+
+      doc.autoTable({
+        head: [headers],
+        body: rows,
+        startY: 32,
+        styles: {
+          fontSize: 7,
+          cellPadding: 1.5,
+          overflow: "linebreak",
+          cellWidth: "wrap",
+          minCellHeight: 8,
+        },
+        headStyles: {
+          fillColor: [26, 35, 126],
+          textColor: [255, 255, 255],
+          fontStyle: "bold",
+          halign: "center",
+          fontSize: 8,
+        },
+        columnStyles: {
+          0: { cellWidth: 20, halign: "center" },
+        },
+        margin: { top: 32, left: 10, right: 10 },
+        didDrawPage: function (data) {
+          const pageCount = doc.internal.getNumberOfPages();
+          doc.setFontSize(8);
+          doc.text(
+            `Page ${data.pageNumber} of ${pageCount}`,
+            doc.internal.pageSize.width / 2,
+            doc.internal.pageSize.height - 10,
+            { align: "center" }
+          );
+        },
+      });
+
+      doc.save(`form_${id}_responses.pdf`);
+      handleMenuClose();
+    } catch (error) {
+      console.error("PDF Export Error:", error.stack);
+      alert("Failed to export PDF: " + error.message);
+    }
   };
 
+  // Handle export button click
   const handleExport = (type) => {
     dispatch(exportFormResponses({ formId: id, token: AUTH_TOKEN }))
       .unwrap()
-      .then((res) => {
-        const data = res?.data || [];
-        if (!data.length) return alert("No data to export!");
-        if (type === "csv") exportToCSV(data);
-        else if (type === "excel") exportToExcel(data);
-        else if (type === "pdf") exportToPDF(data);
+      .then((response) => {
+        const data = response?.data || response;
+
+        if (!data || (Array.isArray(data) && data.length === 0)) {
+          alert("No data available to export!");
+          handleMenuClose();
+          return;
+        }
+
+        setTimeout(() => {
+          if (type === "csv") exportToCSV(data);
+          else if (type === "excel") exportToExcel(data);
+          else if (type === "pdf") exportToPDF(data);
+        }, 100);
       })
-      .catch((err) => console.error("Export failed:", err))
-      .finally(() => handleMenuClose());
+      .catch((err) => {
+        console.error("Export Fetch Error:", err.stack);
+        alert("Failed to fetch export data: " + (err.message || err));
+        handleMenuClose();
+      });
   };
 
   const columns = [
@@ -149,11 +290,11 @@ const ViewResponse = () => {
       ),
     },
     {
-      field: "updatedAt",
-      headerName: "Updated At",
+      field: "createdAt",
+      headerName: "Created At",
       width: 180,
       renderCell: (params) => {
-        if (!params.value) return "N/A";
+        if (!params.value) return <Typography variant="body2">N/A</Typography>;
         const date = new Date(params.value);
         const formatted = date.toLocaleString("en-GB", {
           day: "2-digit",
@@ -163,7 +304,11 @@ const ViewResponse = () => {
           minute: "2-digit",
           hour12: true,
         });
-        return <Typography variant="body2">{formatted}</Typography>;
+        return (
+          <Tooltip title={`Created on ${formatted}`}>
+            <Typography variant="body2">{formatted}</Typography>
+          </Tooltip>
+        );
       },
     },
     {
@@ -294,9 +439,6 @@ const ViewResponse = () => {
           <Divider sx={{ mb: 2 }} />
           {selectedResponse?.fields?.map((field, index) => (
             <Box key={index} sx={{ mb: 2 }}>
-              <Typography variant="subtitle2" color="text.secondary">
-                Type: {field.type}
-              </Typography>
               <Typography variant="subtitle1" fontWeight={600}>
                 {field.label}
               </Typography>
@@ -304,7 +446,7 @@ const ViewResponse = () => {
                 <Typography variant="body2">{field.value.join(", ")}</Typography>
               ) : field.type === "uploadFile" ? (
                 <a
-                  href={field.value}
+                  href={`${field.value}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   style={{ color: "#1a237e", textDecoration: "underline" }}
