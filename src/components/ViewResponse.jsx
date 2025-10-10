@@ -224,10 +224,11 @@ const ViewResponse = () => {
   };
 
   const columns = [
-    { field: "sl_no", headerName: "Sl No", width: 80 },
+    { field: "sl_no", headerName: "Sl No", width: 100  },
     {
       field: "email",
       headerName: "Email",
+
       width: 200,
       renderCell: (params) => (
         <Tooltip title={params.value ? `Email ID: ${params.value}` : "Email not available"}>
@@ -240,6 +241,7 @@ const ViewResponse = () => {
     {
       field: "userIP",
       headerName: "IP Address",
+    
       width: 150,
       renderCell: (params) => (
         <Typography variant="body2" sx={{ fontFamily: "monospace" }}>
@@ -320,7 +322,6 @@ const ViewResponse = () => {
       sl_no: i + 1,
       ...r,
     })) || [];
-
   return (
     <Box sx={{ p: 3, bgcolor: "#f9f9f9", minHeight: "100vh" }}>
       <Paper sx={{ p: 2, mb: 3, boxShadow: 3, borderRadius: 2 }}>
@@ -378,6 +379,13 @@ const ViewResponse = () => {
             }}
             pageSizeOptions={[5, 10, 20]}
             autoHeight
+            sx={{
+    "& .MuiDataGrid-cell": {
+      display: "flex",
+      alignItems: "center", 
+    },
+   
+  }}
             disableRowSelectionOnClick
           />
         </Paper>
