@@ -14,25 +14,24 @@ import {
   MenuItem,
   Grid,
   Alert,
+  Chip,
 } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
-import { Visibility as VisibilityIcon, Assignment } from "@mui/icons-material";
+import { Visibility as VisibilityIcon, Assignment, FileDownload } from "@mui/icons-material";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchFormResponses } from "../redux/features/Adminformslice";
-import { exportToCsv, exportToExcel, exportToPdf } from "../utils/exportCsv";
+import { fetchFormResponses, exportFormResponses } from "../redux/features/Adminformslice";
+import * as XLSX from "xlsx";
+import { jsPDF } from "jspdf";
+import JSPDFAutoTable from "jspdf-autotable"; // Alternative import for explicit plugin application
 import { AUTH_TOKEN } from "../utils/const";
 
 
 const ViewResponse = () => {
-  const { id } = useParams(); 
+  const { id } = useParams();
   const dispatch = useDispatch();
 
-  const { formResponses, currentSchema, loading, error } = useSelector(
-    (state) => state.adminForm
-  );
-
-  console.log("formResponses:", formResponses);
-  console.log("currentSchema:", currentSchema);
+  const { formResponses, currentSchema, loading, exportLoading, error } =
+    useSelector((state) => state.adminForm);
 
   const [selectedResponse, setSelectedResponse] = useState(null);
   const [anchorEl, setAnchorEl] = useState(null);
@@ -41,25 +40,8 @@ const ViewResponse = () => {
   const handleMenuClick = (e) => setAnchorEl(e.currentTarget);
   const handleMenuClose = () => setAnchorEl(null);
 
-  const handleExport = (type) => {
-    if (!formResponses || formResponses.length === 0) return;
-
-    const columns = Object.keys(formResponses[0]).map((key) => ({
-      field: key,
-      headerName: key,
-    }));
-
-    if (type === "csv") exportToCsv(columns, formResponses);
-    if (type === "excel") exportToExcel(columns, formResponses);
-    if (type === "pdf") exportToPdf(columns, formResponses);
-
-    handleMenuClose();
-  };
-
-  // Fetch form responses when component mounts
   useEffect(() => {
     if (id && AUTH_TOKEN) {
-      console.log("Dispatching fetchFormResponses for form ID:", id);
       dispatch(fetchFormResponses({ formId: id, token: AUTH_TOKEN }))
         .unwrap()
         .then((res) => console.log("API Success:", res))
@@ -67,98 +49,286 @@ const ViewResponse = () => {
     }
   }, [dispatch, id]);
 
+  const flattenExportData = (data) => {
+    if (!Array.isArray(data) || data.length === 0) {
+      return [];
+    }
+    return data.map((responseItem, index) => {
+      const flatRow = { "Response #": index + 1 };
+
+      const fields = responseItem.fields || responseItem;
+
+      if (Array.isArray(fields)) {
+        fields.forEach((field) => {
+          let value = field.value;
+          if (Array.isArray(value)) {
+            value = value.join(", ");
+          }
+          flatRow[field.label || "Unknown"] = value || "";
+        });
+      }
+
+      return flatRow;
+    });
+  };
+
+  // Export to CSV
+  const exportToCSV = (data) => {
+    try {
+      const flatData = flattenExportData(data);
+
+      if (!flatData || flatData.length === 0) {
+        alert("No data available to export");
+        return;
+      }
+
+      const headers = Object.keys(flatData[0]);
+      const csvContent = [
+        headers.join(","),
+        ...flatData.map((row) =>
+          headers
+            .map((h) => {
+              const value = row[h] || "";
+              return `"${String(value).replace(/"/g, '""')}"`;
+            })
+            .join(",")
+        ),
+      ].join("\n");
+
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const link = document.createElement("a");
+      const url = URL.createObjectURL(blob);
+      link.setAttribute("href", url);
+      link.setAttribute("download", `form_${id}_responses.csv`);
+      link.style.visibility = "hidden";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      handleMenuClose();
+    } catch (error) {
+      console.error("CSV Export Error:", error.stack);
+      alert("Failed to export CSV: " + error.message);
+    }
+  };
+
+  // Export to Excel
+  const exportToExcel = (data) => {
+    try {
+      const flatData = flattenExportData(data);
+
+      if (!flatData || flatData.length === 0) {
+        alert("No data available to export");
+        return;
+      }
+
+      const ws = XLSX.utils.json_to_sheet(flatData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Responses");
+
+      // Set column widths
+      const maxWidth = 50;
+      const cols = Object.keys(flatData[0]).map(() => ({ wch: maxWidth }));
+      ws["!cols"] = cols;
+
+      XLSX.writeFile(wb, `form_${id}_responses.xlsx`);
+      handleMenuClose();
+    } catch (error) {
+      console.error("Excel Export Error:", error.stack);
+      alert("Failed to export Excel: " + error.message);
+    }
+  };
+
+  // Export to PDF
+  const exportToPDF = (data) => {
+    try {
+      const flatData = flattenExportData(data);
+
+      if (!flatData || flatData.length === 0) {
+        alert("No data available to export");
+        return;
+      }
+
+      const doc = new jsPDF({
+        orientation: "landscape",
+        unit: "mm",
+        format: "a4",
+      });
+
+      // Explicitly apply the autoTable plugin
+      JSPDFAutoTable.default(doc);
+
+      // Add title
+      doc.setFontSize(16);
+      doc.setFont(undefined, "bold");
+      doc.text(`Form ${id} - Responses`, 14, 15);
+
+      // Add metadata
+      doc.setFontSize(10);
+      doc.setFont(undefined, "normal");
+      doc.text(`Total Responses: ${flatData.length}`, 14, 22);
+      doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 27);
+
+      const headers = Object.keys(flatData[0]);
+      const rows = flatData.map((row) =>
+        headers.map((h) => {
+          const val = row[h];
+          return val !== null && val !== undefined ? String(val) : "";
+        })
+      );
+
+      // Verify autoTable is available
+      if (!doc.autoTable) {
+        console.error("autoTable is not available on jsPDF instance after applying plugin");
+        throw new Error("jspdf-autotable plugin is not properly loaded");
+      }
+
+      doc.autoTable({
+        head: [headers],
+        body: rows,
+        startY: 32,
+        styles: {
+          fontSize: 7,
+          cellPadding: 1.5,
+          overflow: "linebreak",
+          cellWidth: "wrap",
+          minCellHeight: 8,
+        },
+        headStyles: {
+          fillColor: [26, 35, 126],
+          textColor: [255, 255, 255],
+          fontStyle: "bold",
+          halign: "center",
+          fontSize: 8,
+        },
+        columnStyles: {
+          0: { cellWidth: 20, halign: "center" },
+        },
+        margin: { top: 32, left: 10, right: 10 },
+        didDrawPage: function (data) {
+          const pageCount = doc.internal.getNumberOfPages();
+          doc.setFontSize(8);
+          doc.text(
+            `Page ${data.pageNumber} of ${pageCount}`,
+            doc.internal.pageSize.width / 2,
+            doc.internal.pageSize.height - 10,
+            { align: "center" }
+          );
+        },
+      });
+
+      doc.save(`form_${id}_responses.pdf`);
+      handleMenuClose();
+    } catch (error) {
+      console.error("PDF Export Error:", error.stack);
+      alert("Failed to export PDF: " + error.message);
+    }
+  };
+
+  // Handle export button click
+  const handleExport = (type) => {
+    dispatch(exportFormResponses({ formId: id, token: AUTH_TOKEN }))
+      .unwrap()
+      .then((response) => {
+        const data = response?.data || response;
+
+        if (!data || (Array.isArray(data) && data.length === 0)) {
+          alert("No data available to export!");
+          handleMenuClose();
+          return;
+        }
+
+        setTimeout(() => {
+          if (type === "csv") exportToCSV(data);
+          else if (type === "excel") exportToExcel(data);
+          else if (type === "pdf") exportToPDF(data);
+        }, 100);
+      })
+      .catch((err) => {
+        console.error("Export Fetch Error:", err.stack);
+        alert("Failed to fetch export data: " + (err.message || err));
+        handleMenuClose();
+      });
+  };
+
   const columns = [
-    { 
-      field: "sl_no", 
-      headerName: "Sl No", 
-      width: 80,
-      renderCell: (params) => (
-        <Typography variant="body2">{params.value}</Typography>
-      )
-    },
-    // { 
-    //   field: "id", 
-    //   headerName: "Response ID", 
-    //   width: 120,
-    //   renderCell: (params) => (
-    //     <Typography variant="body2">{params.value}</Typography>
-    //   )
-    // },
-    { 
-      field: "email", 
-      headerName: "Email", 
+    { field: "sl_no", headerName: "Sl No", width: 80 },
+    {
+      field: "email",
+      headerName: "Email",
       width: 200,
       renderCell: (params) => (
-        <Tooltip title={params.value || "No email provided"}>
+        <Tooltip title={params.value ? `Email ID: ${params.value}` : "Email not available"}>
           <Typography variant="body2" sx={{ color: params.value ? "inherit" : "gray" }}>
             {params.value || "N/A"}
           </Typography>
         </Tooltip>
-      )
+      ),
     },
-    { 
-      field: "userIP", 
-      headerName: "IP Address", 
-      width: 140,
+    {
+      field: "userIP",
+      headerName: "IP Address",
+      width: 150,
       renderCell: (params) => (
         <Typography variant="body2" sx={{ fontFamily: "monospace" }}>
           {params.value || "N/A"}
         </Typography>
-      )
+      ),
     },
     {
       field: "isVerified",
       headerName: "Verified",
-      width: 100,
+      width: 120,
       renderCell: (params) => (
-        <span
-          style={{
-            color: params.value ? "green" : "red",
-            fontWeight: 600,
-          }}
-        >
-          {params.value ? "Yes" : "No"}
-        </span>
+        <Chip
+          label={params.value ? "Verified" : "Not Verified"}
+          size="small"
+          color={params.value ? "success" : "error"}
+          sx={{ fontWeight: 600 }}
+        />
       ),
     },
-    { 
-      field: "userAgent", 
-      headerName: "User Agent", 
+    {
+      field: "createdAt",
+      headerName: "Created At",
       width: 180,
+      renderCell: (params) => {
+        if (!params.value) return <Typography variant="body2">N/A</Typography>;
+        const date = new Date(params.value);
+        const formatted = date.toLocaleString("en-GB", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: true,
+        });
+        return (
+          <Tooltip title={`Created on ${formatted}`}>
+            <Typography variant="body2">{formatted}</Typography>
+          </Tooltip>
+        );
+      },
+    },
+    {
+      field: "userAgent",
+      headerName: "User Agent",
+      width: 200,
       renderCell: (params) => (
         <Tooltip title={params.value || "Unknown"}>
-          <Typography 
-            variant="body2" 
-            sx={{ 
-              overflow: "hidden", 
+          <Typography
+            variant="body2"
+            sx={{
+              overflow: "hidden",
               textOverflow: "ellipsis",
-              whiteSpace: "nowrap" 
+              whiteSpace: "nowrap",
             }}
           >
             {params.value || "N/A"}
           </Typography>
         </Tooltip>
-      )
-    },
-    { 
-      field: "submissionToken", 
-      headerName: "Token", 
-      width: 150,
-      renderCell: (params) => (
-        <Tooltip title={params.value || ""}>
-          <Typography 
-            variant="body2" 
-            sx={{ 
-              fontFamily: "monospace",
-              fontSize: "0.75rem",
-              overflow: "hidden", 
-              textOverflow: "ellipsis" 
-            }}
-          >
-            {params.value ? params.value.substring(0, 12) + "..." : "N/A"}
-          </Typography>
-        </Tooltip>
-      )
+      ),
     },
     {
       field: "view",
@@ -166,10 +336,7 @@ const ViewResponse = () => {
       width: 130,
       renderCell: (params) => (
         <Tooltip title="View Full Response">
-          <IconButton
-            sx={{ color: "#1a237e" }}
-            onClick={() => setSelectedResponse(params.row)}
-          >
+          <IconButton sx={{ color: "#1a237e" }} onClick={() => setSelectedResponse(params.row)}>
             <VisibilityIcon />
           </IconButton>
         </Tooltip>
@@ -185,7 +352,7 @@ const ViewResponse = () => {
 
   return (
     <Box sx={{ p: 3, bgcolor: "#f9f9f9", minHeight: "100vh" }}>
-      <Paper sx={{ p: 2, mb: 3, boxShadow: 3, borderRadius: 2, bgcolor: "#fff" }}>
+      <Paper sx={{ p: 2, mb: 3, boxShadow: 3, borderRadius: 2 }}>
         <Grid container justifyContent="space-between" alignItems="center">
           <Box>
             <Typography variant="h6" fontWeight={600}>
@@ -194,19 +361,20 @@ const ViewResponse = () => {
             <Typography variant="body2" color="text.secondary">
               {rows.length} responses found
             </Typography>
-            {currentSchema?.publishedAt && (
-              <Typography variant="caption" color="text.secondary">
-                Published: {new Date(currentSchema.publishedAt).toLocaleDateString()}
-              </Typography>
-            )}
           </Box>
           <Button
-            variant="outlined"
+            variant="contained"
             onClick={handleMenuClick}
-            disabled={!rows.length || loading}
-            sx={{ textTransform: "none", fontWeight: 500 }}
+            disabled={!rows.length || loading || exportLoading}
+            startIcon={exportLoading ? <CircularProgress size={16} /> : <FileDownload />}
+            sx={{
+              textTransform: "none",
+              fontWeight: 500,
+              bgcolor: "#1a237e",
+              "&:hover": { bgcolor: "#0d175e" },
+            }}
           >
-            EXPORT ALL DATA
+            {exportLoading ? "Exporting..." : "EXPORT DATA"}
           </Button>
           <Menu anchorEl={anchorEl} open={open} onClose={handleMenuClose}>
             <MenuItem onClick={() => handleExport("csv")}>Export as CSV</MenuItem>
@@ -222,9 +390,7 @@ const ViewResponse = () => {
           <Typography sx={{ mt: 2 }}>Loading responses...</Typography>
         </Box>
       ) : error ? (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
-        </Alert>
+        <Alert severity="error">{error}</Alert>
       ) : rows.length === 0 ? (
         <Paper sx={{ p: 4, textAlign: "center", color: "gray" }} elevation={1}>
           <Assignment sx={{ fontSize: 40, mb: 1, color: "gray" }} />
@@ -237,9 +403,7 @@ const ViewResponse = () => {
             columns={columns}
             getRowId={(row) => row.sl_no}
             initialState={{
-              pagination: {
-                paginationModel: { pageSize: 10 },
-              },
+              pagination: { paginationModel: { pageSize: 10 } },
             }}
             pageSizeOptions={[5, 10, 20]}
             autoHeight
@@ -248,10 +412,11 @@ const ViewResponse = () => {
         </Paper>
       )}
 
-      {/* MODAL for viewing full response details */}
+      {/* MODAL SECTION */}
       <Modal
         open={!!selectedResponse}
         onClose={() => setSelectedResponse(null)}
+        aria-labelledby="response-modal"
       >
         <Box
           sx={{
@@ -259,93 +424,47 @@ const ViewResponse = () => {
             top: "50%",
             left: "50%",
             transform: "translate(-50%, -50%)",
-            bgcolor: "white",
-            borderRadius: 2,
+            bgcolor: "background.paper",
             boxShadow: 24,
-            width: 700,
+            borderRadius: 2,
+            p: 4,
+            width: 600,
             maxHeight: "80vh",
             overflowY: "auto",
-            p: 3,
           }}
         >
-          {selectedResponse && (
-            <>
-              <Typography variant="h6" fontWeight={600}>
-                Response Details
-              </Typography>
-              <Divider sx={{ my: 2 }} />
-              
-              <Grid container spacing={2}>
-                <Grid item xs={6}>
-                  <Typography>
-                    <strong>Response ID:</strong> {selectedResponse.id}
-                  </Typography>
-                </Grid>
-                <Grid item xs={6}>
-                  <Typography>
-                    <strong>Email:</strong> {selectedResponse.email || "N/A"}
-                  </Typography>
-                </Grid>
-                <Grid item xs={6}>
-                  <Typography>
-                    <strong>IP Address:</strong> {selectedResponse.userIP || "N/A"}
-                  </Typography>
-                </Grid>
-                <Grid item xs={6}>
-                  <Typography>
-                    <strong>Verified:</strong>{" "}
-                    <span style={{ color: selectedResponse.isVerified ? "green" : "red", fontWeight: 600 }}>
-                      {selectedResponse.isVerified ? "Yes" : "No"}
-                    </span>
-                  </Typography>
-                </Grid>
-                <Grid item xs={12}>
-                  <Typography>
-                    <strong>User Agent:</strong> {selectedResponse.userAgent || "N/A"}
-                  </Typography>
-                </Grid>
-                <Grid item xs={12}>
-                  <Typography sx={{ wordBreak: "break-all" }}>
-                    <strong>Submission Token:</strong> {selectedResponse.submissionToken || "N/A"}
-                  </Typography>
-                </Grid>
-              </Grid>
-
-              <Divider sx={{ my: 2 }} />
-
+          <Typography id="response-modal" variant="h6" fontWeight={600} gutterBottom>
+            Response Details
+          </Typography>
+          <Divider sx={{ mb: 2 }} />
+          {selectedResponse?.fields?.map((field, index) => (
+            <Box key={index} sx={{ mb: 2 }}>
               <Typography variant="subtitle1" fontWeight={600}>
-                Submitted Data:
+                {field.label}
               </Typography>
-              <Box sx={{ mt: 1 }}>
-                {selectedResponse.data && Object.keys(selectedResponse.data).length > 0 ? (
-                  Object.entries(selectedResponse.data).map(([key, value], i) => {
-                    // Skip _files object
-                    if (key === "_files") return null;
-                    
-                    return (
-                      <Paper
-                        key={i}
-                        sx={{ p: 1.5, mb: 1.5, bgcolor: "#f5f5f5", borderRadius: 1 }}
-                      >
-                        <Typography fontWeight={600} sx={{ color: "#1a237e" }}>
-                          {key}
-                        </Typography>
-                        <Typography sx={{ color: "#424242", mt: 0.5 }}>
-                          {Array.isArray(value) 
-                            ? value.join(", ") 
-                            : typeof value === "object" 
-                            ? JSON.stringify(value, null, 2) 
-                            : String(value)}
-                        </Typography>
-                      </Paper>
-                    );
-                  })
-                ) : (
-                  <Typography color="text.secondary">No data found.</Typography>
-                )}
-              </Box>
-            </>
-          )}
+              {Array.isArray(field.value) ? (
+                <Typography variant="body2">{field.value.join(", ")}</Typography>
+              ) : field.type === "uploadFile" ? (
+                <a
+                  href={`${field.value}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ color: "#1a237e", textDecoration: "underline" }}
+                >
+                  {field.value}
+                </a>
+              ) : (
+                <Typography variant="body2">{field.value || "N/A"}</Typography>
+              )}
+              <Divider sx={{ mt: 1 }} />
+            </Box>
+          ))}
+
+          <Box textAlign="right" sx={{ mt: 2 }}>
+            <Button variant="contained" onClick={() => setSelectedResponse(null)}>
+              Close
+            </Button>
+          </Box>
         </Box>
       </Modal>
     </Box>
