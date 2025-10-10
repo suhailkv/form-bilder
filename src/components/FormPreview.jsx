@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom"; // ✅ at the top
 
 import { useFormik, FormikProvider, Form } from "formik";
 
@@ -75,7 +76,7 @@ export default function FormPreview({ previewData }) {
   const { formId } = useParams();
 
   const [otp, setOtp] = useState("");
-
+const navigate = useNavigate();
   // Fetch form data on mount or when formId changes
   useEffect(() => {
     if (formId) {
@@ -112,32 +113,32 @@ export default function FormPreview({ previewData }) {
     enableReinitialize: true, // Reset form if initialValues change
     initialValues,
     validationSchema,
-    onSubmit: (values) => {
-      console.log("values", values);
-      console.log("file path and id", fileIdAndItsFilePath);
-      const data = { ...values, ...fileIdAndItsFilePath };
-      console.log("final", data);
+   onSubmit: (values) => {
+  console.log("values", values);
+  console.log("file path and id", fileIdAndItsFilePath);
+  const data = { ...values, ...fileIdAndItsFilePath };
+  console.log("final", data);
 
-      // Prevent submission if OTP verification required but not verified
-      if (!previewData && schema.emailVerification && !otpVerified) {
-        alert("Please verify your email with OTP before submitting.");
-        return;
+  // Prevent submission if OTP verification required but not verified
+  if (!previewData && schema.emailVerification && !otpVerified) {
+    alert("Please verify your email with OTP before submitting.");
+    return;
+  }
+
+  dispatch(submitForm({ formId: formIdentifier, email, data }))
+    .then((response) => {
+      if (response.payload?.success) {
+        // Navigate to Thank You page after successful submission
+        navigate("/thanks");
+      } else {
+        console.error("Form submission failed:", response.payload);
       }
-      // Dispatch form submission with form id, email, and values
-      // dispatch(submitForm({ formId: formIdentifier, email, data: data }));
+    })
+    .catch((error) => {
+      console.error("Error submitting form:", error);
+    });
+},
 
-      dispatch(submitForm({ formId: formIdentifier, email, data }))
-        .then((response) => {
-          if (response.payload?.success) {
-            setOpenDialog(true); // open thank-you dialog
-          } else {
-            console.error("Form submission failed:", response.payload);
-          }
-        })
-        .catch((error) => {
-          console.error("Error submitting form:", error);
-        });
-    },
   });
 
   const handleRequestOtp = () => {
@@ -165,7 +166,7 @@ export default function FormPreview({ previewData }) {
 
   const handleCloseDialog = () => {
     setOpenDialog(false);
-    window.close(); // close the window after user clicks OK
+    window.close(); 
   };
 
   return (
