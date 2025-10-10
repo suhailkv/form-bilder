@@ -22,9 +22,8 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchFormResponses, exportFormResponses } from "../redux/features/Adminformslice";
 import * as XLSX from "xlsx";
 import { jsPDF } from "jspdf";
-import JSPDFAutoTable from "jspdf-autotable"; // Alternative import for explicit plugin application
+import { autoTable } from "jspdf-autotable"; // Explicit import for plugin
 import { AUTH_TOKEN } from "../utils/const";
-
 
 const ViewResponse = () => {
   const { id } = useParams();
@@ -55,9 +54,7 @@ const ViewResponse = () => {
     }
     return data.map((responseItem, index) => {
       const flatRow = { "Response #": index + 1 };
-
       const fields = responseItem.fields || responseItem;
-
       if (Array.isArray(fields)) {
         fields.forEach((field) => {
           let value = field.value;
@@ -67,7 +64,6 @@ const ViewResponse = () => {
           flatRow[field.label || "Unknown"] = value || "";
         });
       }
-
       return flatRow;
     });
   };
@@ -76,12 +72,10 @@ const ViewResponse = () => {
   const exportToCSV = (data) => {
     try {
       const flatData = flattenExportData(data);
-
       if (!flatData || flatData.length === 0) {
         alert("No data available to export");
         return;
       }
-
       const headers = Object.keys(flatData[0]);
       const csvContent = [
         headers.join(","),
@@ -94,7 +88,6 @@ const ViewResponse = () => {
             .join(",")
         ),
       ].join("\n");
-
       const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
       const link = document.createElement("a");
       const url = URL.createObjectURL(blob);
@@ -105,7 +98,6 @@ const ViewResponse = () => {
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
-
       handleMenuClose();
     } catch (error) {
       console.error("CSV Export Error:", error.stack);
@@ -117,21 +109,16 @@ const ViewResponse = () => {
   const exportToExcel = (data) => {
     try {
       const flatData = flattenExportData(data);
-
       if (!flatData || flatData.length === 0) {
         alert("No data available to export");
         return;
       }
-
       const ws = XLSX.utils.json_to_sheet(flatData);
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Responses");
-
-      // Set column widths
       const maxWidth = 50;
       const cols = Object.keys(flatData[0]).map(() => ({ wch: maxWidth }));
       ws["!cols"] = cols;
-
       XLSX.writeFile(wb, `form_${id}_responses.xlsx`);
       handleMenuClose();
     } catch (error) {
@@ -140,31 +127,25 @@ const ViewResponse = () => {
     }
   };
 
-  // Export to PDF
+  // Export to PDF - using explicit autoTable import and call
   const exportToPDF = (data) => {
     try {
       const flatData = flattenExportData(data);
-
       if (!flatData || flatData.length === 0) {
         alert("No data available to export");
         return;
       }
-
       const doc = new jsPDF({
         orientation: "landscape",
         unit: "mm",
         format: "a4",
       });
 
-      // Explicitly apply the autoTable plugin
-      JSPDFAutoTable.default(doc);
-
-      // Add title
+      // Add title and metadata
       doc.setFontSize(16);
       doc.setFont(undefined, "bold");
       doc.text(`Form ${id} - Responses`, 14, 15);
 
-      // Add metadata
       doc.setFontSize(10);
       doc.setFont(undefined, "normal");
       doc.text(`Total Responses: ${flatData.length}`, 14, 22);
@@ -172,19 +153,11 @@ const ViewResponse = () => {
 
       const headers = Object.keys(flatData[0]);
       const rows = flatData.map((row) =>
-        headers.map((h) => {
-          const val = row[h];
-          return val !== null && val !== undefined ? String(val) : "";
-        })
+        headers.map((h) => (row[h] !== null && row[h] !== undefined ? String(row[h]) : ""))
       );
 
-      // Verify autoTable is available
-      if (!doc.autoTable) {
-        console.error("autoTable is not available on jsPDF instance after applying plugin");
-        throw new Error("jspdf-autotable plugin is not properly loaded");
-      }
-
-      doc.autoTable({
+      // Call the imported autoTable function passing doc instance and options
+      autoTable(doc, {
         head: [headers],
         body: rows,
         startY: 32,
@@ -197,7 +170,7 @@ const ViewResponse = () => {
         },
         headStyles: {
           fillColor: [26, 35, 126],
-          textColor: [255, 255, 255],
+          textColor: 255,
           fontStyle: "bold",
           halign: "center",
           fontSize: 8,
@@ -206,7 +179,7 @@ const ViewResponse = () => {
           0: { cellWidth: 20, halign: "center" },
         },
         margin: { top: 32, left: 10, right: 10 },
-        didDrawPage: function (data) {
+        didDrawPage: (data) => {
           const pageCount = doc.internal.getNumberOfPages();
           doc.setFontSize(8);
           doc.text(
@@ -232,13 +205,11 @@ const ViewResponse = () => {
       .unwrap()
       .then((response) => {
         const data = response?.data || response;
-
         if (!data || (Array.isArray(data) && data.length === 0)) {
           alert("No data available to export!");
           handleMenuClose();
           return;
         }
-
         setTimeout(() => {
           if (type === "csv") exportToCSV(data);
           else if (type === "excel") exportToExcel(data);
@@ -459,7 +430,6 @@ const ViewResponse = () => {
               <Divider sx={{ mt: 1 }} />
             </Box>
           ))}
-
           <Box textAlign="right" sx={{ mt: 2 }}>
             <Button variant="contained" onClick={() => setSelectedResponse(null)}>
               Close
