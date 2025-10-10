@@ -15,7 +15,6 @@ import { useDispatch, useSelector } from "react-redux";
 import {  useParams } from "react-router-dom"; // Add this import
 import { useNavigate } from "react-router-dom";
 import { publishForm } from "../../redux/features/formCreationSlice";
-import { BACKEND_URL } from "../../utils/const";
 
 
 export const Publish = ({formId}) => {
@@ -45,13 +44,14 @@ export const Publish = ({formId}) => {
     }
 
     try {
-      const resultAction = await dispatch(publishForm(formId || formIds));
+      const resultAction = await dispatch(publishForm(formId));
 
       if (publishForm.fulfilled.match(resultAction)) {
         // Extract the encoded token from backend response if available
-        const formToken = resultAction.payload?.formToken || formId || formIds;
-        const link = `${BACKEND_URL}/api/forms/${formToken}`;
-        setPublishedLink(link);
+        const formToken = resultAction.payload?.formToken ;
+        // const link = `${BACKEND_URL}/api/forms/${formToken}`;
+         const fullUrl = `${window.location.origin}/form/${formToken}`;
+        setPublishedLink(fullUrl);
       }
     } catch (err) {
       console.error("Publish error:", err);

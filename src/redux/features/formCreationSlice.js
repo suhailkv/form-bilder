@@ -1,6 +1,10 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
-import { AUTH_TOKEN, BACKEND_URL } from "../../utils/const";
+// import { AUTH_TOKEN, BACKEND_URL, FILE_PATH } from "../../utils/const";
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+const AUTH_TOKEN = import.meta.env.VITE_AUTH_TOKEN;
+const FILE_PATH = import.meta.env.VITE_FILE_PATH;
+
 
 // Dynamic token getter
 const getToken = () => localStorage.getItem("authToken") || AUTH_TOKEN;
@@ -122,7 +126,7 @@ export const uploadBannerImage = createAsyncThunk(
 
       if (response.data.success && storedName) {
         // Create preview URL for display
-        const imageUrl = `${BACKEND_URL}/uploads/temp/${storedName}`;
+        const imageUrl = `${BACKEND_URL}${FILE_PATH}${storedName}`;
 
         return {
           success: true,
@@ -293,7 +297,7 @@ const formCreationSlice = createSlice({
 
         // Set preview URL if banner exists
         if (action.payload?.bannerImage) {
-          state.bannerImagePreviewUrl = `${BACKEND_URL}/uploads/temp/${action.payload.bannerImage}`;
+          state.bannerImagePreviewUrl = `${BACKEND_URL}${FILE_PATH}${action.payload.bannerImage}`;
         }
       })
       .addCase(fetchForm.rejected, (state, action) => {
@@ -319,7 +323,7 @@ const formCreationSlice = createSlice({
 
         // Set preview URL if banner exists
         if (action.payload?.bannerImage) {
-          state.bannerImagePreviewUrl = `${BACKEND_URL}/uploads/temp/${action.payload.bannerImage}`;
+          state.bannerImagePreviewUrl = `${BACKEND_URL}${FILE_PATH}${action.payload.bannerImage}`;
         }
       })
       .addCase(createForm.rejected, (state, action) => {
@@ -343,7 +347,7 @@ const formCreationSlice = createSlice({
         // };
 
         if (action.payload?.bannerImage) {
-          state.bannerImagePreviewUrl = `${BACKEND_URL}/uploads/temp/${action.payload.bannerImage}`;
+          state.bannerImagePreviewUrl = `${BACKEND_URL}${FILE_PATH}${action.payload.bannerImage}`;
         }
       })
       .addCase(updateForm.rejected, (state, action) => {

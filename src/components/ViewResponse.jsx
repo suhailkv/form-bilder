@@ -23,7 +23,7 @@ import { fetchFormResponses, exportFormResponses } from "../redux/features/Admin
 import * as XLSX from "xlsx";
 import { jsPDF } from "jspdf";
 import { autoTable } from "jspdf-autotable"; // Explicit import for plugin
-import { AUTH_TOKEN } from "../utils/const";
+const AUTH_TOKEN = import.meta.env.VITE_AUTH_TOKEN;
 
 const ViewResponse = () => {
   const { id } = useParams();

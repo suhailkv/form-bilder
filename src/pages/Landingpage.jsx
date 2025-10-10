@@ -19,9 +19,8 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchFormsList, softDeleteForm } from "../redux/features/Adminformslice";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { AUTH_TOKEN } from "../utils/const";
 import { Icon } from '@iconify/react';
-
+const AUTH_TOKEN = import.meta.env.VITE_AUTH_TOKEN;
 
 
 export default function LandingPage() {

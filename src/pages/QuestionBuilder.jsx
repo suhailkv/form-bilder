@@ -168,8 +168,8 @@ export default function QuestionBuilder() {
         setTimeout(() => setShowLoader(false), 500);
       });
     } else {
-      // dispatch(resetSchema());
-      // dispatch(removeBannerImage());
+      dispatch(resetSchema());
+      dispatch(removeBannerImage());
     }
   }, [formId]);
 
