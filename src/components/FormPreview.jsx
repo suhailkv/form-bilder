@@ -33,7 +33,7 @@ import { evaluateConditions } from "../utils/formSchema";
 import * as Yup from "yup";
 import FormHeader from "./FormHeader";
 import { BACKEND_URL } from "../utils/const";
-
+import { FILE_PATH } from "../utils/const";
 // Wrapper component to add a Clear button next to form fields
 const FieldWrapper = ({ field, children, values, setFieldValue }) => (
   <Box sx={{ mb: 2 }}>
@@ -200,8 +200,8 @@ export default function FormPreview({ previewData }) {
                   <img
                     src={
                       previewData?.bannerImage
-                        ? `${BACKEND_URL}/uploads/temp/${previewData.bannerImage}`
-                        : `${BACKEND_URL}/uploads/temp/${formData.bannerImage}`
+                        ? `${BACKEND_URL}${FILE_PATH}${previewData.bannerImage}`
+                        : `${BACKEND_URL}${FILE_PATH}${formData.bannerImage}`
                     }
                     alt="Banner"
                     style={{ width: "100%", height: "100%", objectFit: "cover" }}
