@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
-import { BACKEND_URL } from "../../utils/const";
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
 const axiosInstance = axios.create({
   baseURL: `${BACKEND_URL}/api`,

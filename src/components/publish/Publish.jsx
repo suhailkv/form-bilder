@@ -15,7 +15,6 @@ import { useDispatch, useSelector } from "react-redux";
 import {  useParams } from "react-router-dom"; // Add this import
 import { useNavigate } from "react-router-dom";
 import { publishForm } from "../../redux/features/formCreationSlice";
-import { BACKEND_URL } from "../../utils/const";
 
 
 export const Publish = ({formId}) => {

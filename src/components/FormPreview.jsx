@@ -32,8 +32,8 @@ import { uploadBannerImage } from "../redux/features/formCreationSlice";
 import { evaluateConditions } from "../utils/formSchema";
 import * as Yup from "yup";
 import FormHeader from "./FormHeader";
-import { BACKEND_URL } from "../utils/const";
-import { FILE_PATH } from "../utils/const";
+const FILE_PATH = import.meta.env.VITE_FILE_PATH;
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 // Wrapper component to add a Clear button next to form fields
 const FieldWrapper = ({ field, children, values, setFieldValue }) => (
   <Box sx={{ mb: 2 }}>
