@@ -200,11 +200,12 @@ export default function FormPreview({ previewData }) {
           fontFamily: "Roboto, Arial, sans-serif",
         }}
       >
-        <Box sx={{ width: "100%", maxWidth: 760 }}>
-          <Paper sx={{ borderRadius: "8px" }}>
-            {/* Display banner image if available */}
-            {(previewData?.bannerImageFilename || formData?.bannerImage) && (
-              <Box
+        <Box sx={{ width: "100%", maxWidth: 640 }}>
+          <Paper>
+            {(previewData?.bannerImageFilename || previewData?.bannerImage || formData?.bannerImageFilename || formData?.bannerImage) && (
+            
+                  console.log("hit",previewData),
+                <Box
                 sx={{
                   width: "100%",
                   height: { xs: 70, sm: 120, md: 200 },
@@ -216,13 +217,18 @@ export default function FormPreview({ previewData }) {
               >
                 <img
                   src={
-                    previewData?.bannerImageFilename
-                      ? `${BACKEND_URL}/uploads/temp/${previewData.bannerImageFilename}`
+                    previewData?.bannerImage
+                      ?  `${BACKEND_URL}/uploads/temp/${previewData.bannerImage}`
                       : `${BACKEND_URL}/uploads/temp/${formData.bannerImage}`
-                  }
+                  
+                      
+                  } 
+                      
                   alt="Banner"
                   style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                  
                 />
+                   
               </Box>
             )}
           </Paper>

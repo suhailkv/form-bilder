@@ -2,10 +2,8 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 import { AUTH_TOKEN, BACKEND_URL } from "../../utils/const";
 
-
-
 // Dynamic token getter
-const getToken = () => localStorage.getItem('authToken') ||AUTH_TOKEN 
+const getToken = () => localStorage.getItem("authToken") || AUTH_TOKEN;
 /* --------------------------------------------
    1. FETCH FORM BY ID
 --------------------------------------------- */
@@ -13,7 +11,9 @@ export const fetchForm = createAsyncThunk(
   "formCreation/fetchForm",
   async (formId, { rejectWithValue }) => {
     try {
-      const response = await axios.get(`${BACKEND_URL}/api/forms/${formId}?token=${getToken()}`);
+      const response = await axios.get(
+        `${BACKEND_URL}/api/forms/${formId}?token=${getToken()}`
+      );
       return response.data.data;
     } catch (error) {
       return rejectWithValue(
@@ -22,8 +22,6 @@ export const fetchForm = createAsyncThunk(
     }
   }
 );
-
-
 
 /* --------------------------------------------
    2. CREATE NEW FORM (Fixed to send filename only)
@@ -37,20 +35,22 @@ export const createForm = createAsyncThunk(
         ...payload,
         bannerImage: payload.bannerImageFilename || null, // Send only filename
       };
-      
+
       // Remove temporary fields
       delete cleanPayload.bannerImageFilename;
-      
+
       console.log("Creating form with payload:", cleanPayload);
       const response = await axios.post(
-        `${BACKEND_URL}/api/forms?token=${getToken()}`, 
+        `${BACKEND_URL}/api/forms?token=${getToken()}`,
         cleanPayload
       );
       return response.data.data;
     } catch (error) {
       console.error("Create form error:", error.response?.data || error);
       return rejectWithValue(
-        error.response?.data?.message || error.message || "Failed to create form"
+        error.response?.data?.message ||
+          error.message ||
+          "Failed to create form"
       );
     }
   }
@@ -68,19 +68,21 @@ export const updateForm = createAsyncThunk(
         ...payload,
         bannerImage: payload.bannerImageFilename || null,
       };
-      
+
       delete cleanPayload.bannerImageFilename;
-      
+
       console.log("Updating form with payload:", cleanPayload);
       const response = await axios.put(
-        `${BACKEND_URL}/api/forms/${formId}?token=${getToken()}`, 
+        `${BACKEND_URL}/api/forms/${formId}?token=${getToken()}`,
         cleanPayload
       );
       return response.data.data;
     } catch (error) {
       console.error("Update form error:", error.response?.data || error);
       return rejectWithValue(
-        error.response?.data?.message || error.message || "Failed to update form"
+        error.response?.data?.message ||
+          error.message ||
+          "Failed to update form"
       );
     }
   }
@@ -104,14 +106,14 @@ export const uploadBannerImage = createAsyncThunk(
 
       // Handle multiple response formats from backend
       let storedName = null;
-      
+
       // Format 1: { success: true, files: [{ storedName: "..." }] }
       if (response.data?.files?.length > 0) {
         storedName = response.data.files[0].storedName;
       }
       // Format 2: { success: true, fileName: "uploads/..." }
       else if (response.data?.fileName) {
-        storedName = response.data.fileName.replace('uploads/', '');
+        storedName = response.data.fileName.replace("uploads/", "");
       }
       // Format 3: { success: true, file: { filename: "..." } }
       else if (response.data?.file?.filename) {
@@ -121,14 +123,16 @@ export const uploadBannerImage = createAsyncThunk(
       if (response.data.success && storedName) {
         // Create preview URL for display
         const imageUrl = `${BACKEND_URL}/uploads/temp/${storedName}`;
-        
+
         return {
           success: true,
           storedName,
           imagePreviewUrl: imageUrl, // URL for display only
         };
       } else {
-        return rejectWithValue("Upload failed: No file information returned from server");
+        return rejectWithValue(
+          "Upload failed: No file information returned from server"
+        );
       }
     } catch (error) {
       console.error("Upload error:", error);
@@ -146,7 +150,9 @@ export const deleteBannerImage = createAsyncThunk(
   "formCreation/deleteBannerImage",
   async (filename, { rejectWithValue }) => {
     try {
-      await axios.delete(`${BACKEND_URL}/api/upload/${filename}?token=${getToken()}`);
+      await axios.delete(
+        `${BACKEND_URL}/api/upload/${filename}?token=${getToken()}`
+      );
       return { success: true };
     } catch (error) {
       console.error("Delete banner error:", error);
@@ -163,17 +169,20 @@ export const publishForm = createAsyncThunk(
       const response = await axios.post(
         `${BACKEND_URL}/api/forms/${formId}/publish?token=${getToken()}`
       );
-      
+
       // Return the full response data
       return {
         success: true,
-        formToken: response.data?.formToken || response.data?.data?.formToken || formId,
-        ...response.data
+        formToken:
+          response.data?.formToken || response.data?.data?.formToken || formId,
+        ...response.data,
       };
     } catch (error) {
       console.error("Publish error:", error);
       return rejectWithValue(
-        error.response?.data?.message || error.message || "Failed to publish form"
+        error.response?.data?.message ||
+          error.message ||
+          "Failed to publish form"
       );
     }
   }
@@ -262,6 +271,9 @@ const formCreationSlice = createSlice({
     clearBannerError: (state) => {
       state.bannerImageError = null;
     },
+    resetSchema: (state) => {
+      state.schema = initialState.schema;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -278,7 +290,7 @@ const formCreationSlice = createSlice({
           // fields: action.payload?.fields || [],
           // bannerImageFilename: action.payload?.bannerImage || null,
         };
-        
+
         // Set preview URL if banner exists
         if (action.payload?.bannerImage) {
           state.bannerImagePreviewUrl = `${BACKEND_URL}/uploads/temp/${action.payload.bannerImage}`;
@@ -298,13 +310,13 @@ const formCreationSlice = createSlice({
       .addCase(createForm.fulfilled, (state, action) => {
         state.loading = false;
         state.error = null;
-        state.schema = {
-          ...initialState.schema,
-          ...action.payload,
-          fields: action.payload?.fields || [],
-          bannerImageFilename: action.payload?.bannerImage || null,
-        };
-        
+        // state.schema = {
+        //   ...initialState.schema,
+        //   ...action.payload,
+        //   // fields: action.payload?.fields ||,
+        //   bannerImageFilename: action.payload?.bannerImage || null,
+        // };
+
         // Set preview URL if banner exists
         if (action.payload?.bannerImage) {
           state.bannerImagePreviewUrl = `${BACKEND_URL}/uploads/temp/${action.payload.bannerImage}`;
@@ -323,13 +335,13 @@ const formCreationSlice = createSlice({
       .addCase(updateForm.fulfilled, (state, action) => {
         state.loading = false;
         state.error = null;
-        state.schema = {
-          ...initialState.schema,
-          ...action.payload,
-          // fields: action.payload?.fields || [],
-          // bannerImageFilename: action.payload?.bannerImage || null,
-        };
-        
+        // state.schema = {
+        //   ...initialState.schema,
+        //   ...action.payload,
+        //   // fields: action.payload?.fields || [],
+        //   // bannerImageFilename: action.payload?.bannerImage || null,
+        // };
+
         if (action.payload?.bannerImage) {
           state.bannerImagePreviewUrl = `${BACKEND_URL}/uploads/temp/${action.payload.bannerImage}`;
         }
@@ -347,7 +359,7 @@ const formCreationSlice = createSlice({
       .addCase(uploadBannerImage.fulfilled, (state, action) => {
         state.loadingBannerImage = false;
         state.bannerImageError = null;
-        
+
         if (action.payload.success) {
           // Store filename for form submission
           state.schema.bannerImageFilename = action.payload.storedName;
@@ -378,18 +390,17 @@ const formCreationSlice = createSlice({
         state.schema.bannerImageFilename = null;
         state.bannerImagePreviewUrl = null;
       })
-       /* ---- PUBLISH FORM ---- */
-    .addCase(publishForm.pending, (state) => {
-      state.loading = true;
-    })
-    .addCase(publishForm.fulfilled, (state) => {
-      state.loading = false;
-    })
-    .addCase(publishForm.rejected, (state, action) => {
-      state.loading = false;
-      state.error = action.payload;
-    });
-      
+      /* ---- PUBLISH FORM ---- */
+      .addCase(publishForm.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(publishForm.fulfilled, (state) => {
+        state.loading = false;
+      })
+      .addCase(publishForm.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      });
   },
 });
 
@@ -411,6 +422,7 @@ export const {
   removeBannerImage,
   clearError,
   clearBannerError,
+  resetSchema
 } = formCreationSlice.actions;
 
 export default formCreationSlice.reducer;

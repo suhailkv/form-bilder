@@ -1,11 +1,37 @@
-import React, { useEffect, useState } from "react";
+import React, { use, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  Box, AppBar, Toolbar, IconButton, Button, InputBase, Tooltip,
-  Paper, Typography, TextField, Select, MenuItem, Divider, Radio,
-  Switch, Checkbox, FormControl, InputLabel, Modal, Backdrop, Fade,
-  Menu, List, ListItem, ListItemButton, ListItemIcon, ListItemText,
-  useTheme, useMediaQuery, CircularProgress, Alert,
+  Box,
+  AppBar,
+  Toolbar,
+  IconButton,
+  Button,
+  InputBase,
+  Tooltip,
+  Paper,
+  Typography,
+  TextField,
+  Select,
+  MenuItem,
+  Divider,
+  Radio,
+  Switch,
+  Checkbox,
+  FormControl,
+  InputLabel,
+  Modal,
+  Backdrop,
+  Fade,
+  Menu,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  useTheme,
+  useMediaQuery,
+  CircularProgress,
+  Alert,
 } from "@mui/material";
 import { Publish } from "../components/publish/Publish";
 import {
@@ -28,12 +54,25 @@ import ConditionalLogic from "../components/ConditionalLogic";
 import FormPreview from "../components/FormPreview";
 import { fieldTypes, createNewField } from "../utils/formSchema";
 import {
-  setSchema, setUndoStack, setRedoStack, setShowPreview,
-  setFocusedQuestion, setMenuAnchor, setMenuQuestionId,
-  setMobileMenuOpen, setConditionalLogicOpen, setDraggedId,
-  fetchForm, createForm, updateForm, setEmailVerification,
-  uploadBannerImage, deleteBannerImage, removeBannerImage,
+  setSchema,
+  setUndoStack,
+  setRedoStack,
+  setShowPreview,
+  setFocusedQuestion,
+  setMenuAnchor,
+  setMenuQuestionId,
+  setMobileMenuOpen,
+  setConditionalLogicOpen,
+  setDraggedId,
+  fetchForm,
+  createForm,
+  updateForm,
+  setEmailVerification,
+  uploadBannerImage,
+  deleteBannerImage,
+  removeBannerImage,
   clearBannerError,
+  resetSchema,
 } from "../redux/features/formCreationSlice";
 
 // Styles
@@ -90,6 +129,7 @@ const loaderStyle = {
 };
 
 export default function QuestionBuilder() {
+  const [formIdAfterSave, setFormIdAfterSave] = useState(null); // New state for formId after save
   const theme = useTheme();
   const isXs = useMediaQuery(theme.breakpoints.down("sm"));
   const isXsOrSm = useMediaQuery(theme.breakpoints.down("sm"));
@@ -127,10 +167,12 @@ export default function QuestionBuilder() {
       dispatch(fetchForm(formId)).finally(() => {
         setTimeout(() => setShowLoader(false), 500);
       });
+    } else {
+      // dispatch(resetSchema());
+      // dispatch(removeBannerImage());
     }
-  }, [formId, dispatch]);
+  }, [formId]);
 
-   
   // Clear success message after 3 seconds
   useEffect(() => {
     if (saveSuccess) {
@@ -170,10 +212,10 @@ export default function QuestionBuilder() {
 
   const handleTitleChange = (newTitle) =>
     dispatch(setSchema({ ...schema, title: newTitle }));
-  
+
   const handleDescriptionChange = (newDescription) =>
     dispatch(setSchema({ ...schema, description: newDescription }));
-  
+
   const handleThankYouMessageChange = (newMessage) =>
     dispatch(setSchema({ ...schema, thankYouMessage: newMessage }));
 
@@ -291,11 +333,16 @@ export default function QuestionBuilder() {
     dispatch(clearBannerError());
 
     // Validate file type
-    const validImageTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
+    const validImageTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/gif",
+      "image/webp",
+    ];
     if (!validImageTypes.includes(file.type)) {
       dispatch({
-        type: 'formCreation/uploadBannerImage/rejected',
-        payload: "Please upload a valid image file (JPEG, PNG, GIF, or WebP)."
+        type: "formCreation/uploadBannerImage/rejected",
+        payload: "Please upload a valid image file (JPEG, PNG, GIF, or WebP).",
       });
       return;
     }
@@ -304,8 +351,8 @@ export default function QuestionBuilder() {
     const maxSize = 5 * 1024 * 1024;
     if (file.size > maxSize) {
       dispatch({
-        type: 'formCreation/uploadBannerImage/rejected',
-        payload: "Image size exceeds 5MB limit. Please compress the image."
+        type: "formCreation/uploadBannerImage/rejected",
+        payload: "Image size exceeds 5MB limit. Please compress the image.",
       });
       return;
     }
@@ -317,7 +364,7 @@ export default function QuestionBuilder() {
   // Remove Banner Handler (Fixed)
   const handleRemoveBanner = () => {
     const filename = schema.bannerImageFilename;
-    
+
     if (filename) {
       // Delete from server
       dispatch(deleteBannerImage(filename));
@@ -393,12 +440,13 @@ export default function QuestionBuilder() {
         await dispatch(updateForm({ formId, payload: schema })).unwrap();
       } else {
         const result = await dispatch(createForm(schema)).unwrap();
-        
+        setFormIdAfterSave(result.id);
+
         // Navigate to the new form's URL after creation
-        if (result._id || result.id) {
-          const newFormId = result._id || result.id;
-          navigate(`/`, { replace: true });
-        }
+        // if (result._id || result.id) {
+        //   const newFormId = result._id || result.id;
+        //   navigate(`/`, { replace: true });
+        // }
       }
       setSaveSuccess(true);
     } catch (err) {
@@ -412,9 +460,21 @@ export default function QuestionBuilder() {
   const renderOptionControl = (type) => {
     switch (type) {
       case "radio":
-        return <Radio disabled size={isXs ? "small" : "medium"} sx={{ p: isXs ? 0.25 : 0.5 }} />;
+        return (
+          <Radio
+            disabled
+            size={isXs ? "small" : "medium"}
+            sx={{ p: isXs ? 0.25 : 0.5 }}
+          />
+        );
       case "checkbox":
-        return <Checkbox disabled size={isXs ? "small" : "medium"} sx={{ p: isXs ? 0.25 : 0.5 }} />;
+        return (
+          <Checkbox
+            disabled
+            size={isXs ? "small" : "medium"}
+            sx={{ p: isXs ? 0.25 : 0.5 }}
+          />
+        );
       case "multipleChoice":
         return (
           <FormControl sx={{ minWidth: isXs ? "100%" : 260, mt: 1 }}>
@@ -445,31 +505,41 @@ export default function QuestionBuilder() {
       onClose={handleCloseMenu}
       closeAfterTransition
       BackdropComponent={Backdrop}
-      BackdropProps={{ timeout: 300, sx: { backgroundColor: "rgba(0, 0, 0, 0.3)" } }}
+      BackdropProps={{
+        timeout: 300,
+        sx: { backgroundColor: "rgba(0, 0, 0, 0.3)" },
+      }}
     >
       <Fade in={mobileMenuOpen}>
-        <Box sx={{
-          position: "absolute",
-          bottom: 0,
-          left: 0,
-          right: 0,
-          bgcolor: "background.paper",
-          borderTopLeftRadius: 16,
-          borderTopRightRadius: 16,
-          boxShadow: "0 -4px 20px rgba(0,0,0,0.1)",
-          p: 0,
-          outline: "none",
-          maxHeight: "60vh",
-          overflow: "hidden",
-        }}>
-          <Box sx={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            p: 2,
-            borderBottom: "1px solid #e0e0e0",
-          }}>
-            <Typography variant="h6" sx={{ fontSize: "1.1rem", fontWeight: 500 }}>
+        <Box
+          sx={{
+            position: "absolute",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            bgcolor: "background.paper",
+            borderTopLeftRadius: 16,
+            borderTopRightRadius: 16,
+            boxShadow: "0 -4px 20px rgba(0,0,0,0.1)",
+            p: 0,
+            outline: "none",
+            maxHeight: "60vh",
+            overflow: "hidden",
+          }}
+        >
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              p: 2,
+              borderBottom: "1px solid #e0e0e0",
+            }}
+          >
+            <Typography
+              variant="h6"
+              sx={{ fontSize: "1.1rem", fontWeight: 500 }}
+            >
               Question options
             </Typography>
             <IconButton onClick={handleCloseMenu} size="small">
@@ -486,8 +556,17 @@ export default function QuestionBuilder() {
                   <RuleOutlined sx={{ color: "#5f6368" }} />
                 </ListItemIcon>
                 <ListItemText
-                  primary={conditionalLogicOpen === menuQuestionId ? "Hide conditions" : "Add condition"}
-                  sx={{ "& .MuiListItemText-primary": { fontSize: "1rem", color: "#3c4043" } }}
+                  primary={
+                    conditionalLogicOpen === menuQuestionId
+                      ? "Hide conditions"
+                      : "Add condition"
+                  }
+                  sx={{
+                    "& .MuiListItemText-primary": {
+                      fontSize: "1rem",
+                      color: "#3c4043",
+                    },
+                  }}
                 />
               </ListItemButton>
             </ListItem>
@@ -502,7 +581,12 @@ export default function QuestionBuilder() {
                 </ListItemIcon>
                 <ListItemText
                   primary="Duplicate"
-                  sx={{ "& .MuiListItemText-primary": { fontSize: "1rem", color: "#3c4043" } }}
+                  sx={{
+                    "& .MuiListItemText-primary": {
+                      fontSize: "1rem",
+                      color: "#3c4043",
+                    },
+                  }}
                 />
               </ListItemButton>
             </ListItem>
@@ -517,7 +601,12 @@ export default function QuestionBuilder() {
                 </ListItemIcon>
                 <ListItemText
                   primary="Delete"
-                  sx={{ "& .MuiListItemText-primary": { fontSize: "1rem", color: "#d93025" } }}
+                  sx={{
+                    "& .MuiListItemText-primary": {
+                      fontSize: "1rem",
+                      color: "#d93025",
+                    },
+                  }}
                 />
               </ListItemButton>
             </ListItem>
@@ -546,20 +635,40 @@ export default function QuestionBuilder() {
             py: { xs: 0.5, sm: 0.75, md: 1 },
           }}
         >
+         
           <Toolbar
             sx={{
               display: "flex",
               justifyContent: "space-between",
-              minHeight: { xs: "48px !important", sm: "52px !important", md: "56px !important" },
+              minHeight: {
+                xs: "48px !important",
+                sm: "52px !important",
+                md: "56px !important",
+              },
               alignItems: "center",
             }}
           >
-            <Box sx={{ display: "flex", alignItems: "center", gap: { xs: 1, sm: 1.5, md: 2 } }}>
-              <TextSnippetIcon sx={{ color: "#7049b4", fontSize: { xs: 24, sm: 26, md: 28 } }} />
-              <Typography sx={{ fontSize: { xs: "0.9rem", sm: "0.95rem", md: "1rem" }, fontWeight: 500, color: "#202124" }}>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: { xs: 1, sm: 1.5, md: 2 },
+              }}
+            >
+              <TextSnippetIcon
+                sx={{ color: "#7049b4", fontSize: { xs: 24, sm: 26, md: 28 } }}
+              />
+              <Typography
+                sx={{
+                  fontSize: { xs: "0.9rem", sm: "0.95rem", md: "1rem" },
+                  fontWeight: 500,
+                  color: "#202124",
+                }}
+              >
                 {schema.title || "Untitled Form"} - Preview
               </Typography>
             </Box>
+           
             <Button
               variant="outlined"
               onClick={handlePreviewToggle}
@@ -590,14 +699,14 @@ export default function QuestionBuilder() {
 
       {/* Success Alert */}
       {saveSuccess && (
-        <Alert 
-          severity="success" 
-          sx={{ 
-            position: "fixed", 
-            top: 20, 
-            right: 20, 
+        <Alert
+          severity="success"
+          sx={{
+            position: "fixed",
+            top: 20,
+            right: 20,
             zIndex: 2000,
-            boxShadow: 3 
+            boxShadow: 3,
           }}
           onClose={() => setSaveSuccess(false)}
         >
@@ -607,16 +716,16 @@ export default function QuestionBuilder() {
 
       {/* Error Alert */}
       {error && (
-        <Alert 
-          severity="error" 
-          sx={{ 
-            position: "fixed", 
-            top: 20, 
-            right: 20, 
+        <Alert
+          severity="error"
+          sx={{
+            position: "fixed",
+            top: 20,
+            right: 20,
             zIndex: 2000,
-            boxShadow: 3 
+            boxShadow: 3,
           }}
-          onClose={() => dispatch({ type: 'formCreation/clearError' })}
+          onClose={() => dispatch({ type: "formCreation/clearError" })}
         >
           {error}
         </Alert>
@@ -639,12 +748,26 @@ export default function QuestionBuilder() {
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-            minHeight: { xs: "48px !important", sm: "52px !important", md: "56px !important" },
+            minHeight: {
+              xs: "48px !important",
+              sm: "52px !important",
+              md: "56px !important",
+            },
             gap: { xs: 0.5, sm: 1, md: 2 },
           }}
         >
-          <Box sx={{ display: "flex", alignItems: "center", gap: { xs: 1, sm: 1.5, md: 2 } }}>
-            <TextSnippetIcon sx={{ color: "#7049b4", fontSize: { xs: 24, sm: 28, md: 32 } }} />
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: { xs: 1, sm: 1.5, md: 2 },
+            }}
+          >
+
+         
+            <TextSnippetIcon
+              sx={{ color: "#7049b4", fontSize: { xs: 24, sm: 28, md: 32 } }}
+            />
             {!isXsOrSm && (
               <InputBase
                 value={schema.title || ""}
@@ -653,41 +776,84 @@ export default function QuestionBuilder() {
                 sx={{ fontSize: { md: "1.8rem" }, fontWeight: 600 }}
               />
             )}
-            <Tooltip title="Save Form" arrow>
+
+            <Tooltip title={formId ? "Update Form" : "Save Form"} arrow>
               <IconButton
                 aria-label="save"
                 size="small"
                 sx={{ ml: { xs: 0, sm: 0, md: "-44px" } }}
                 onClick={handleSaveForm}
-                disabled={loading}
               >
-                <Icon icon="mdi:content-save-check-outline" style={{ color: loading ? "#ccc" : "#4e6ca7ff", fontSize: 30 }} />
+                <Icon
+                  icon={
+                    formId
+                      ? "material-symbols:update-rounded"
+                      : "mdi:content-save-check-outline"
+                  }
+                  style={{
+                    color: loading ? "#ccc" : "#4e6ca7ff",
+                    fontSize: 30,
+                  }}
+                />
               </IconButton>
             </Tooltip>
+            
           </Box>
-          <Box sx={{ display: "flex", alignItems: "center", gap: { xs: 0.5, sm: 1, md: 1.5 } }}>
+          
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: { xs: 0.5, sm: 1, md: 1.5 },
+            }}
+          >
             <Tooltip title="Undo" arrow>
               <span>
-                <IconButton onClick={handleUndo} disabled={undoStack.length === 0} size="small">
-                  <UndoIcon sx={{ color: undoStack.length === 0 ? "#ccc" : "#7049b4", fontSize: { xs: 18, sm: 20, md: 24 } }} />
+                <IconButton
+                  onClick={handleUndo}
+                  disabled={undoStack.length === 0}
+                  size="small"
+                >
+                  <UndoIcon
+                    sx={{
+                      color: undoStack.length === 0 ? "#ccc" : "#7049b4",
+                      fontSize: { xs: 18, sm: 20, md: 24 },
+                    }}
+                  />
                 </IconButton>
               </span>
             </Tooltip>
             <Tooltip title="Redo" arrow>
               <span>
-                <IconButton onClick={handleRedo} disabled={redoStack.length === 0} size="small">
-                  <RedoIcon sx={{ color: redoStack.length === 0 ? "#ccc" : "#7049b4", fontSize: { xs: 18, sm: 20, md: 24 } }} />
+                <IconButton
+                  onClick={handleRedo}
+                  disabled={redoStack.length === 0}
+                  size="small"
+                >
+                  <RedoIcon
+                    sx={{
+                      color: redoStack.length === 0 ? "#ccc" : "#7049b4",
+                      fontSize: { xs: 18, sm: 20, md: 24 },
+                    }}
+                  />
                 </IconButton>
               </span>
             </Tooltip>
             <Tooltip title="Preview" arrow>
               <IconButton onClick={handlePreviewToggle} size="small">
-                <VisibilityIcon sx={{ color: "#959698", fontSize: { xs: 18, sm: 20, md: 24 } }} />
+                <VisibilityIcon
+                  sx={{
+                    color: "#959698",
+                    fontSize: { xs: 18, sm: 20, md: 24 },
+                  }}
+                />
               </IconButton>
             </Tooltip>
-            <Publish />
+            <Publish formId={formId || formIdAfterSave} />
             <IconButton size="small">
-              <MoreVertIcon sx={{ color: "#959698", fontSize: { xs: 18, sm: 20, md: 24 } }} />
+              <MoreVertIcon
+                sx={{ color: "#959698", fontSize: { xs: 18, sm: 20, md: 24 } }}
+              />
             </IconButton>
           </Box>
         </Toolbar>
@@ -695,7 +861,7 @@ export default function QuestionBuilder() {
 
       <Box sx={containerStyles}>
         <MiniSideBar onAddQuestion={handleAddQuestion} />
-        
+
         {/* Header with Banner Upload */}
         <Paper sx={headerStyles}>
           <Box sx={{ mb: isXs ? 2 : 3, position: "relative" }}>
@@ -714,11 +880,11 @@ export default function QuestionBuilder() {
                 <img
                   src={bannerImagePreviewUrl}
                   alt="Banner"
-                  style={{ 
-                    width: "100%", 
-                    height: "100%", 
+                  style={{
+                    width: "100%",
+                    height: "100%",
                     objectFit: "cover",
-                    display: loadingBannerImage ? "none" : "block"
+                    display: loadingBannerImage ? "none" : "block",
                   }}
                   onError={(e) => {
                     console.error("Image failed to load");
@@ -726,12 +892,14 @@ export default function QuestionBuilder() {
                   }}
                 />
                 {loadingBannerImage && (
-                  <Box sx={{ 
-                    position: "absolute", 
-                    top: "50%", 
-                    left: "50%", 
-                    transform: "translate(-50%, -50%)" 
-                  }}>
+                  <Box
+                    sx={{
+                      position: "absolute",
+                      top: "50%",
+                      left: "50%",
+                      transform: "translate(-50%, -50%)",
+                    }}
+                  >
                     <CircularProgress size={40} />
                   </Box>
                 )}
@@ -791,8 +959,8 @@ export default function QuestionBuilder() {
               </Box>
             )}
             {bannerImageError && (
-              <Alert 
-                severity="error" 
+              <Alert
+                severity="error"
                 sx={{ mt: 1 }}
                 onClose={() => dispatch(clearBannerError())}
               >
@@ -807,7 +975,10 @@ export default function QuestionBuilder() {
             value={schema.title}
             onChange={(e) => handleTitleChange(e.target.value)}
             placeholder="Untitled form"
-            InputProps={{ disableUnderline: true, sx: { fontSize: isXs ? "1.5rem" : isXsOrSm ? "1.8rem" : "2rem" } }}
+            InputProps={{
+              disableUnderline: true,
+              sx: { fontSize: isXs ? "1.5rem" : isXsOrSm ? "1.8rem" : "2rem" },
+            }}
           />
           <Divider sx={{ my: isXs ? 1 : 2 }} />
           <TextField
@@ -816,29 +987,55 @@ export default function QuestionBuilder() {
             value={schema.description}
             onChange={(e) => handleDescriptionChange(e.target.value)}
             placeholder="Form description"
-            InputProps={{ disableUnderline: true, sx: { fontSize: isXs ? "0.9rem" : "1rem", color: "#666" } }}
+            InputProps={{
+              disableUnderline: true,
+              sx: { fontSize: isXs ? "0.9rem" : "1rem", color: "#666" },
+            }}
           />
         </Paper>
 
         {/* Email Verification Section */}
         <Paper sx={headerStyles}>
-          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <Typography variant="subtitle1" sx={{ fontWeight: 500, fontSize: isXs ? "1rem" : "1.1rem" }}>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            <Typography
+              variant="subtitle1"
+              sx={{ fontWeight: 500, fontSize: isXs ? "1rem" : "1.1rem" }}
+            >
               Require Email Address
             </Typography>
-            <Switch 
-              checked={schema.emailVerification ?? true} 
-              onChange={(e) => dispatch(setEmailVerification(e.target.checked))} 
+            <Switch
+              checked={schema.emailVerification ?? true}
+              onChange={(e) => dispatch(setEmailVerification(e.target.checked))}
             />
           </Box>
-          <Typography variant="body2" sx={{ color: "#666", mt: 0.5, fontSize: isXs ? "0.8rem" : "0.9rem" }}>
+          <Typography
+            variant="body2"
+            sx={{
+              color: "#666",
+              mt: 0.5,
+              fontSize: isXs ? "0.8rem" : "0.9rem",
+            }}
+          >
             Collect respondent email addresses
           </Typography>
         </Paper>
 
         {/* Thank You Message Section */}
         <Paper sx={headerStyles}>
-          <Typography variant="subtitle1" sx={{ fontWeight: 500, mb: isXs ? 1 : 2, fontSize: isXs ? "1rem" : "1.1rem" }}>
+          <Typography
+            variant="subtitle1"
+            sx={{
+              fontWeight: 500,
+              mb: isXs ? 1 : 2,
+              fontSize: isXs ? "1rem" : "1.1rem",
+            }}
+          >
             Submission Message
           </Typography>
           <Divider sx={{ my: isXs ? 1 : 2 }} />
@@ -848,7 +1045,10 @@ export default function QuestionBuilder() {
             value={schema.thankYouMessage}
             onChange={(e) => handleThankYouMessageChange(e.target.value)}
             placeholder="Thank you for submitting the form!"
-            InputProps={{ disableUnderline: true, sx: { fontSize: isXs ? "0.9rem" : "1rem", color: "#666" } }}
+            InputProps={{
+              disableUnderline: true,
+              sx: { fontSize: isXs ? "0.9rem" : "1rem", color: "#666" },
+            }}
           />
         </Paper>
 
@@ -872,7 +1072,14 @@ export default function QuestionBuilder() {
               onDrop={(e) => handleDrop(e, q.id)}
               onClick={() => dispatch(setFocusedQuestion(q.id))}
             >
-              <Box sx={{ display: "flex", alignItems: "center", p: isXs ? 1 : 1.5, flexDirection: isXs ? "column" : "row" }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  p: isXs ? 1 : 1.5,
+                  flexDirection: isXs ? "column" : "row",
+                }}
+              >
                 <Tooltip title="Drag to reorder">
                   <DragIndicatorIcon
                     className="drag-handle"
@@ -901,13 +1108,23 @@ export default function QuestionBuilder() {
                 <Box sx={{ width: isXs ? "100%" : "auto" }}>
                   <Select
                     value={q.type}
-                    onChange={(e) => handleQuestionTypeChange(q.id, e.target.value)}
+                    onChange={(e) =>
+                      handleQuestionTypeChange(q.id, e.target.value)
+                    }
                     variant="outlined"
                     size="small"
-                    sx={{ minWidth: isXs ? "100%" : 140, bgcolor: "#faf8ff", fontSize: isXs ? "0.9rem" : "1rem" }}
+                    sx={{
+                      minWidth: isXs ? "100%" : 140,
+                      bgcolor: "#faf8ff",
+                      fontSize: isXs ? "0.9rem" : "1rem",
+                    }}
                   >
                     {Object.entries(fieldTypes || {}).map(([type, config]) => (
-                      <MenuItem key={type} value={type} sx={{ fontSize: isXs ? "0.8rem" : "0.9rem" }}>
+                      <MenuItem
+                        key={type}
+                        value={type}
+                        sx={{ fontSize: isXs ? "0.8rem" : "0.9rem" }}
+                      >
                         <span>{config.label}</span>
                       </MenuItem>
                     ))}
@@ -917,22 +1134,45 @@ export default function QuestionBuilder() {
 
               <Divider />
 
-              {(q.type === "radio" || q.type === "select" || q.type === "multipleChoice") && (
+              {(q.type === "radio" ||
+                q.type === "select" ||
+                q.type === "multipleChoice") && (
                 <Box>
                   {(q.options || []).map((opt, i) => (
-                    <Box key={i} sx={{ display: "flex", alignItems: "center", p: isXs ? 0.5 : 1 }}>
+                    <Box
+                      key={i}
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        p: isXs ? 0.5 : 1,
+                      }}
+                    >
                       {q.type === "multipleChoice" ? (
-                        <Checkbox disabled size={isXs ? "small" : "medium"} sx={{ p: isXs ? 0.25 : 0.5 }} />
+                        <Checkbox
+                          disabled
+                          size={isXs ? "small" : "medium"}
+                          sx={{ p: isXs ? 0.25 : 0.5 }}
+                        />
                       ) : (
                         renderOptionControl(q.type)
                       )}
                       <TextField
                         variant="standard"
                         value={opt}
-                        onChange={(e) => handleOptionChange(q.id, i, e.target.value)}
+                        onChange={(e) =>
+                          handleOptionChange(q.id, i, e.target.value)
+                        }
                         placeholder={`Option ${i + 1}`}
-                        InputProps={{ disableUnderline: true, sx: { fontSize: isXs ? "0.8rem" : "0.9rem" } }}
-                        sx={{ width: isXs ? "100%" : 260, mr: 1, ml: 1, bgcolor: "#efebf9" }}
+                        InputProps={{
+                          disableUnderline: true,
+                          sx: { fontSize: isXs ? "0.8rem" : "0.9rem" },
+                        }}
+                        sx={{
+                          width: isXs ? "100%" : 260,
+                          mr: 1,
+                          ml: 1,
+                          bgcolor: "#efebf9",
+                        }}
                       />
                       {q.options && q.options.length > 1 && (
                         <IconButton
@@ -951,18 +1191,31 @@ export default function QuestionBuilder() {
                     <Button
                       variant="text"
                       size="small"
-                      sx={{ color: "#7049b4", fontSize: isXs ? "0.8rem" : "0.9rem" }}
+                      sx={{
+                        color: "#7049b4",
+                        fontSize: isXs ? "0.8rem" : "0.9rem",
+                      }}
                       onClick={() => handleAddOption(q.id)}
                     >
                       Add option
                     </Button>
-                    <Typography component="span" sx={{ mx: 1, color: "#5c646d", fontSize: isXs ? "0.8rem" : "0.9rem" }}>
+                    <Typography
+                      component="span"
+                      sx={{
+                        mx: 1,
+                        color: "#5c646d",
+                        fontSize: isXs ? "0.8rem" : "0.9rem",
+                      }}
+                    >
                       or
                     </Typography>
                     <Button
                       variant="text"
                       size="small"
-                      sx={{ color: "#7049b4", fontSize: isXs ? "0.8rem" : "0.9rem" }}
+                      sx={{
+                        color: "#7049b4",
+                        fontSize: isXs ? "0.8rem" : "0.9rem",
+                      }}
                       onClick={() => handleAddOtherOption(q.id)}
                     >
                       Add "Other"
@@ -978,20 +1231,40 @@ export default function QuestionBuilder() {
                     variant="standard"
                     placeholder={q.placeholder || "Your answer"}
                     InputProps={{ disableUnderline: true }}
-                    sx={{ width: isXs ? "100%" : "50%", fontSize: isXs ? "0.8rem" : "0.9rem" }}
+                    sx={{
+                      width: isXs ? "100%" : "50%",
+                      fontSize: isXs ? "0.8rem" : "0.9rem",
+                    }}
                   />
                 </Box>
               )}
 
-              {q.type === "checkbox" && <Box sx={{ p: isXs ? 1 : 2, pl: isXs ? 2 : 4 }}></Box>}
+              {q.type === "checkbox" && (
+                <Box sx={{ p: isXs ? 1 : 2, pl: isXs ? 2 : 4 }}></Box>
+              )}
 
               {q.type === "uploadFile" && (
                 <Box sx={{ p: isXs ? 1 : 2, pl: isXs ? 2 : 4 }}>
                   {q.fileData ? (
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 2, p: 1, border: "1px solid #ccc", borderRadius: 1 }}>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 2,
+                        p: 1,
+                        border: "1px solid #ccc",
+                        borderRadius: 1,
+                      }}
+                    >
                       <CloudUploadOutlined color="action" />
-                      <Typography variant="body1" sx={{ flexGrow: 1 }}>{q.fileName}</Typography>
-                      <Button onClick={() => handleRemoveQuestionFile(q.id)} color="error" size="small">
+                      <Typography variant="body1" sx={{ flexGrow: 1 }}>
+                        {q.fileName}
+                      </Typography>
+                      <Button
+                        onClick={() => handleRemoveQuestionFile(q.id)}
+                        color="error"
+                        size="small"
+                      >
                         Remove
                       </Button>
                     </Box>
@@ -1000,7 +1273,10 @@ export default function QuestionBuilder() {
                       variant="outlined"
                       component="label"
                       startIcon={<CloudUploadOutlined />}
-                      sx={{ width: isXs ? "100%" : "50%", fontSize: isXs ? "0.8rem" : "0.9rem" }}
+                      sx={{
+                        width: isXs ? "100%" : "50%",
+                        fontSize: isXs ? "0.8rem" : "0.9rem",
+                      }}
                     >
                       Upload File
                       <input
@@ -1019,7 +1295,9 @@ export default function QuestionBuilder() {
                     <ConditionalLogic
                       field={q}
                       allFields={schema.fields}
-                      onChange={(updatedField) => handleConditionalLogicChange(q.id, updatedField)}
+                      onChange={(updatedField) =>
+                        handleConditionalLogicChange(q.id, updatedField)
+                      }
                     />
                   </Paper>
                 </Box>
@@ -1028,9 +1306,19 @@ export default function QuestionBuilder() {
               {isFocused && (
                 <>
                   <Divider />
-                  <Box sx={{ display: "flex", justifyContent: "flex-end", p: isXs ? 1 : 1.5, gap: isXs ? 0.25 : 0.5 }}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "flex-end",
+                      p: isXs ? 1 : 1.5,
+                      gap: isXs ? 0.25 : 0.5,
+                    }}
+                  >
                     <Tooltip title="Duplicate">
-                      <IconButton size="small" onClick={() => handleDuplicateField(q.id)}>
+                      <IconButton
+                        size="small"
+                        onClick={() => handleDuplicateField(q.id)}
+                      >
                         <ContentCopyOutlined fontSize="small" />
                       </IconButton>
                     </Tooltip>
@@ -1043,8 +1331,20 @@ export default function QuestionBuilder() {
                         <DeleteOutlineOutlined fontSize="small" />
                       </IconButton>
                     </Tooltip>
-                    <Divider orientation="vertical" flexItem sx={{ mx: isXs ? 0.5 : 1 }} />
-                    <Typography variant="body2" sx={{ fontSize: isXs ? "0.75rem" : "0.875rem", mr: 1, display: "flex", alignItems: "center" }}>
+                    <Divider
+                      orientation="vertical"
+                      flexItem
+                      sx={{ mx: isXs ? 0.5 : 1 }}
+                    />
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        fontSize: isXs ? "0.75rem" : "0.875rem",
+                        mr: 1,
+                        display: "flex",
+                        alignItems: "center",
+                      }}
+                    >
                       Required
                     </Typography>
                     <Switch
@@ -1053,7 +1353,10 @@ export default function QuestionBuilder() {
                       onChange={() => handleToggleRequired(q.id)}
                     />
                     <Tooltip title="More options">
-                      <IconButton size="small" onClick={(e) => handleOpenMenu(e, q.id)}>
+                      <IconButton
+                        size="small"
+                        onClick={(e) => handleOpenMenu(e, q.id)}
+                      >
                         <MoreVertIcon fontSize="small" />
                       </IconButton>
                     </Tooltip>
@@ -1072,21 +1375,30 @@ export default function QuestionBuilder() {
                       <RuleOutlined fontSize="small" />
                     </ListItemIcon>
                     <ListItemText sx={{ fontSize: "0.9rem" }}>
-                      {conditionalLogicOpen === q.id ? "Hide conditions" : "Add condition"}
+                      {conditionalLogicOpen === q.id
+                        ? "Hide conditions"
+                        : "Add condition"}
                     </ListItemText>
                   </MenuItem>
                   <MenuItem onClick={() => handleDuplicateField(q.id)}>
                     <ListItemIcon>
                       <ContentCopyOutlined fontSize="small" />
                     </ListItemIcon>
-                    <ListItemText sx={{ fontSize: "0.9rem" }}>Duplicate</ListItemText>
+                    <ListItemText sx={{ fontSize: "0.9rem" }}>
+                      Duplicate
+                    </ListItemText>
                   </MenuItem>
                   <Divider />
-                  <MenuItem onClick={() => handleDeleteField(q.id)} sx={{ color: "error.main" }}>
+                  <MenuItem
+                    onClick={() => handleDeleteField(q.id)}
+                    sx={{ color: "error.main" }}
+                  >
                     <ListItemIcon>
                       <DeleteOutlineOutlined fontSize="small" color="error" />
                     </ListItemIcon>
-                    <ListItemText sx={{ fontSize: "0.9rem" }}>Delete</ListItemText>
+                    <ListItemText sx={{ fontSize: "0.9rem" }}>
+                      Delete
+                    </ListItemText>
                   </MenuItem>
                 </Menu>
               )}
@@ -1098,7 +1410,10 @@ export default function QuestionBuilder() {
 
         {schema.fields.length === 0 && (
           <Box sx={{ mt: isXs ? 3 : 6, textAlign: "center", color: "#666" }}>
-            <Typography variant="h6" sx={{ fontSize: isXs ? "1rem" : "1.25rem" }}>
+            <Typography
+              variant="h6"
+              sx={{ fontSize: isXs ? "1rem" : "1.25rem" }}
+            >
               Click "+" to add your first question
             </Typography>
           </Box>

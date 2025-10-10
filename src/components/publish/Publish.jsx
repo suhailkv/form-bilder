@@ -12,22 +12,25 @@ import {
 } from "@mui/material";
 import { Close as CloseIcon, ContentCopy as CopyIcon } from "@mui/icons-material";
 import { useDispatch, useSelector } from "react-redux";
-import { useParams } from "react-router-dom"; // Add this import
+import {  useParams } from "react-router-dom"; // Add this import
+import { useNavigate } from "react-router-dom";
 import { publishForm } from "../../redux/features/formCreationSlice";
 import { BACKEND_URL } from "../../utils/const";
 
 
-export const Publish = () => {
+export const Publish = ({formId}) => {
+   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { formId } = useParams(); // Get formId from URL params
+  // const { formIds } = useParams(); // Get formId from URL params
   const { loading, error, schema } = useSelector((state) => state.formCreation);
+// console.log("formId in publish",formId);
 
   const [open, setOpen] = useState(false);
   const [publishedLink, setPublishedLink] = useState(null);
   const [copied, setCopied] = useState(false);
 
   // Use schema._id if formId from params is not available
-  const currentFormId = formId || schema._id || schema.id;
+  const currentFormId = formId|| schema._id || schema.id;
 
   const handlePublish = async () => {
     // Validate form exists
@@ -42,11 +45,11 @@ export const Publish = () => {
     }
 
     try {
-      const resultAction = await dispatch(publishForm(formId));
+      const resultAction = await dispatch(publishForm(formId || formIds));
 
       if (publishForm.fulfilled.match(resultAction)) {
         // Extract the encoded token from backend response if available
-        const formToken = resultAction.payload?.formToken || formId;
+        const formToken = resultAction.payload?.formToken || formId || formIds;
         const link = `${BACKEND_URL}/api/forms/${formToken}`;
         setPublishedLink(link);
       }
@@ -66,6 +69,7 @@ export const Publish = () => {
   const handleClose = () => {
     setOpen(false);
     setPublishedLink(null);
+    navigate("/")                                                  
     setCopied(false);
   };
 
@@ -74,7 +78,7 @@ export const Publish = () => {
       <Button
         variant="contained"
         onClick={() => setOpen(true)}
-        disabled={!formId} // Disable if no formId
+        disabled={!formId && !formId} // Disable if no formId
         sx={{
           background: "#7049b4",
           color: "white",
