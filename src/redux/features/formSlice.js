@@ -1,7 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
-
-const API_URL = "http://172.16.3.227:5000";
+import { BACKEND_URL } from "../../utils/const";
 
 const initialState = {
   loading: false,
@@ -13,61 +12,48 @@ const initialState = {
 };
 
 // 1️⃣ Fetch form
-export const fetchForm = createAsyncThunk(
-  "form/fetchForm",
-  async (formId, { rejectWithValue }) => {
-    try {
-      const res = await axios.get(`${API_URL}/form/${formId}`);
-      return res.data.data;
-    } catch (err) {
-      return rejectWithValue(err.response?.data?.message || err.message);
-    }
+export const fetchForm = createAsyncThunk("form/fetchForm", async (formId, { rejectWithValue }) => {
+  try {
+    const res = await axios.get(`${BACKEND_URL}/form/${formId}`);
+    return res.data.data;
+  } catch (err) {
+    return rejectWithValue(err.response?.data?.message || err.message);
   }
-);
+});
 
 // 2️⃣ Request OTP
-export const requestOtp = createAsyncThunk(
-  "form/requestOtp",
-  async ({ formId, email }, { rejectWithValue }) => {
-    try {
-      const res = await axios.post(`${API_URL}/form/${formId}/request-otp`, { email });
-      return { email, message: res.data.message };
-    } catch (err) {
-      return rejectWithValue(err.response?.data?.message || err.message);
-    }
+export const requestOtp = createAsyncThunk("form/requestOtp", async ({ formId, email }, { rejectWithValue }) => {
+  try {
+    const res = await axios.post(`${BACKEND_URL}/form/${formId}/request-otp`, { email });
+    return { email, message: res.data.message };
+  } catch (err) {
+    return rejectWithValue(err.response?.data?.message || err.message);
   }
-);
+});
 
 // 3️⃣ Verify OTP
-export const verifyOtp = createAsyncThunk(
-  "form/verifyOtp",
-  async ({ email, otp, formToken }, { rejectWithValue }) => {
-    try {
-      const res = await axios.post(`${API_URL}/form/${formToken}/verify-otp`, {
-        email,
-        otp,
-        formToken
-      });
-      return res.data.message;
-    } catch (err) {
-      return rejectWithValue(err.response?.data?.message || err.message);
-    }
+export const verifyOtp = createAsyncThunk("form/verifyOtp", async ({ email, otp, formToken }, { rejectWithValue }) => {
+  try {
+    const res = await axios.post(`${BACKEND_URL}/form/${formToken}/verify-otp`, {
+      email,
+      otp,
+      formToken,
+    });
+    return res.data.message;
+  } catch (err) {
+    return rejectWithValue(err.response?.data?.message || err.message);
   }
-);
-
+});
 
 // 4️⃣ Submit form
-export const submitForm = createAsyncThunk(
-  "form/submitForm",
-  async ({ formId, email, data }, { rejectWithValue }) => {
-    try {
-      const res = await axios.post(`${API_URL}/api/submissions/forms/${formId}/submit`, { email, data });
-      return res.data;
-    } catch (err) {
-      return rejectWithValue(err.response?.data?.message || err.message);
-    }
+export const submitForm = createAsyncThunk("form/submitForm", async ({ formId, email, data }, { rejectWithValue }) => {
+  try {
+    const res = await axios.post(`${BACKEND_URL}/api/submissions/forms/${formId}/submit`, { email, data });
+    return res.data;
+  } catch (err) {
+    return rejectWithValue(err.response?.data?.message || err.message);
   }
-);
+});
 
 const formSlice = createSlice({
   name: "form",
@@ -149,4 +135,3 @@ const formSlice = createSlice({
 
 export const { setFormData, setEmail, resetOtp, setOtpVerified } = formSlice.actions;
 export default formSlice.reducer;
-

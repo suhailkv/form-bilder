@@ -26,13 +26,7 @@ import UploadFileIcon from "@mui/icons-material/UploadFile";
 import { RadioButtonUnchecked, RadioButtonChecked } from "@mui/icons-material";
 
 import { useSelector, useDispatch } from "react-redux";
-import {
-  fetchForm,
-  setEmail,
-  requestOtp,
-  verifyOtp,
-  submitForm,
-} from "../redux/features/formSlice";
+import { fetchForm, setEmail, requestOtp, verifyOtp, submitForm } from "../redux/features/formSlice";
 import { uploadBannerImage } from "../redux/features/formCreationSlice";
 
 import { evaluateConditions } from "../utils/formSchema";
@@ -44,41 +38,37 @@ import { BACKEND_URL } from "../utils/const";
 const FieldWrapper = ({ field, children, values, setFieldValue }) => (
   <Box sx={{ mb: 2 }}>
     {children}
-    {values[field.id] !== undefined &&
-      (field.type !== "checkbox" || values[field.id] === true) && (
-        <Box display="flex" justifyContent="flex-end" mt={1}>
-          <Button
-            size="small"
-            variant="text"
-            onClick={() => {
-              // Clear the field based on type
-              if (field.type === "checkbox") setFieldValue(field.id, false);
-              else if (field.type === "multipleChoice")
-                setFieldValue(field.id, []);
-              else setFieldValue(field.id, "");
-            }}
-            sx={{
-              textTransform: "none",
-              fontSize: "0.85rem",
-              color: "text.secondary",
-              fontFamily: "Roboto, Arial, sans-serif",
-            }}
-          >
-            Clear
-          </Button>
-        </Box>
-      )}
+    {values[field.id] !== undefined && (field.type !== "checkbox" || values[field.id] === true) && (
+      <Box display="flex" justifyContent="flex-end" mt={1}>
+        <Button
+          size="small"
+          variant="text"
+          onClick={() => {
+            // Clear the field based on type
+            if (field.type === "checkbox") setFieldValue(field.id, false);
+            else if (field.type === "multipleChoice") setFieldValue(field.id, []);
+            else setFieldValue(field.id, "");
+          }}
+          sx={{
+            textTransform: "none",
+            fontSize: "0.85rem",
+            color: "text.secondary",
+            fontFamily: "Roboto, Arial, sans-serif",
+          }}
+        >
+          Clear
+        </Button>
+      </Box>
+    )}
   </Box>
 );
 
 // Main component displaying form preview and handling user interactions
 export default function FormPreview({ previewData }) {
-  const [openDialog, setOpenDialog] = useState(true);
+  const [openDialog, setOpenDialog] = useState(false);
   const [fileIdAndItsFilePath, setFileAndItsFilePath] = useState({});
   // Select required state from Redux store
-  const { formData, email, otpSent, otpVerified, error } = useSelector(
-    (store) => store.form
-  );
+  const { formData, email, otpSent, otpVerified, error } = useSelector((store) => store.form);
   const dispatch = useDispatch();
 
   // Get formId from URL params for fetching and identification
@@ -112,8 +102,7 @@ export default function FormPreview({ previewData }) {
   // Setup Yup validation schema for required fields
   const validationSchema = Yup.object(
     schema?.fields?.reduce((acc, field) => {
-      if (field.required)
-        acc[field.id] = Yup.mixed().required(`${field.label} is required`);
+      if (field.required) acc[field.id] = Yup.mixed().required(`${field.label} is required`);
       return acc;
     }, {}) || {}
   );
@@ -165,17 +154,10 @@ export default function FormPreview({ previewData }) {
     dispatch(verifyOtp({ email, otp, formToken: formIdentifier }));
   };
 
-  const { bannerImagePreviewUrl, loadingBannerImage } = useSelector(
-    (state) => state.formCreation
-  );
+  const { bannerImagePreviewUrl, loadingBannerImage } = useSelector((state) => state.formCreation);
   if (!schema || !schema.fields) {
     return (
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        minHeight="100vh"
-      >
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
         <Typography variant="h6">Loading form...</Typography>
       </Box>
     );
@@ -202,35 +184,30 @@ export default function FormPreview({ previewData }) {
       >
         <Box sx={{ width: "100%", maxWidth: 640 }}>
           <Paper>
-            {(previewData?.bannerImageFilename || previewData?.bannerImage || formData?.bannerImageFilename || formData?.bannerImage) && (
-            
-                  console.log("hit",previewData),
+            {(previewData?.bannerImageFilename || previewData?.bannerImage || formData?.bannerImageFilename || formData?.bannerImage) &&
+              (console.log("hit", previewData),
+              (
                 <Box
-                sx={{
-                  width: "100%",
-                  height: { xs: 70, sm: 120, md: 200 },
-                  borderRadius: "8px",
-                  overflow: "hidden",
-                  mb: 2,
-                  position: "relative",
-                }}
-              >
-                <img
-                  src={
-                    previewData?.bannerImage
-                      ?  `${BACKEND_URL}/uploads/temp/${previewData.bannerImage}`
-                      : `${BACKEND_URL}/uploads/temp/${formData.bannerImage}`
-                  
-                      
-                  } 
-                      
-                  alt="Banner"
-                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                  
-                />
-                   
-              </Box>
-            )}
+                  sx={{
+                    width: "100%",
+                    height: { xs: 70, sm: 120, md: 200 },
+                    borderRadius: "8px",
+                    overflow: "hidden",
+                    mb: 2,
+                    position: "relative",
+                  }}
+                >
+                  <img
+                    src={
+                      previewData?.bannerImage
+                        ? `${BACKEND_URL}/uploads/temp/${previewData.bannerImage}`
+                        : `${BACKEND_URL}/uploads/temp/${formData.bannerImage}`
+                    }
+                    alt="Banner"
+                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                  />
+                </Box>
+              ))}
           </Paper>
 
           {/* Show form title and description */}
@@ -265,10 +242,7 @@ export default function FormPreview({ previewData }) {
                   }}
                   elevation={3}
                 >
-                  <Typography
-                    align="center"
-                    sx={{ color: "common.white", fontWeight: 500 }}
-                  >
+                  <Typography align="center" sx={{ color: "common.white", fontWeight: 500 }}>
                     ✔️ Verified
                   </Typography>
                 </Paper>
@@ -277,18 +251,8 @@ export default function FormPreview({ previewData }) {
                   {/* Email input & Request OTP button */}
                   {!otpSent && (
                     <>
-                      <TextField
-                        fullWidth
-                        label="Enter Email"
-                        value={email}
-                        onChange={(e) => dispatch(setEmail(e.target.value))}
-                        sx={{ mb: 2 }}
-                      />
-                      <Box
-                        display="flex"
-                        justifyContent="flex-end"
-                        sx={{ padding: "8px 0", backgroundColor: "#fff" }}
-                      >
+                      <TextField fullWidth label="Enter Email" value={email} onChange={(e) => dispatch(setEmail(e.target.value))} sx={{ mb: 2 }} />
+                      <Box display="flex" justifyContent="flex-end" sx={{ padding: "8px 0", backgroundColor: "#fff" }}>
                         <Button
                           variant="contained"
                           onClick={handleRequestOtp}
@@ -319,20 +283,9 @@ export default function FormPreview({ previewData }) {
                   {/* OTP input & Verify button */}
                   {otpSent && !otpVerified && (
                     <>
-                      <TextField
-                        label="Enter OTP"
-                        value={otp}
-                        onChange={(e) => setOtp(e.target.value)}
-                        sx={{ mb: 2 }}
-                        fullWidth
-                      />
+                      <TextField label="Enter OTP" value={otp} onChange={(e) => setOtp(e.target.value)} sx={{ mb: 2 }} fullWidth />
                       <Box display="flex" justifyContent="flex-end">
-                        <Button
-                          variant="contained"
-                          color="success"
-                          onClick={handleVerifyOtp}
-                          disabled={otpVerified}
-                        >
+                        <Button variant="contained" color="success" onClick={handleVerifyOtp} disabled={otpVerified}>
                           Verify OTP
                         </Button>
                       </Box>
@@ -356,28 +309,16 @@ export default function FormPreview({ previewData }) {
               {schema.fields.map(
                 (field) =>
                   evaluateConditions(field, formik.values) && (
-                    <Paper
-                      key={field.id}
-                      sx={{ p: 3, mb: 2, color: "text.primary" }}
-                      elevation={1}
-                    >
+                    <Paper key={field.id} sx={{ p: 3, mb: 2, color: "text.primary" }} elevation={1}>
                       {/* Display label if not checkbox */}
                       {field.type !== "checkbox" && (
-                        <Typography
-                          gutterBottom
-                          fontWeight={500}
-                          fontSize="20px"
-                        >
+                        <Typography gutterBottom fontWeight={500} fontSize="20px">
                           {field.label}
                         </Typography>
                       )}
 
                       {/* Field with clear button wrapper */}
-                      <FieldWrapper
-                        field={field}
-                        values={formik.values}
-                        setFieldValue={formik.setFieldValue}
-                      >
+                      <FieldWrapper field={field} values={formik.values} setFieldValue={formik.setFieldValue}>
                         {/* Render input based on field type */}
 
                         {/* Text input */}
@@ -408,16 +349,8 @@ export default function FormPreview({ previewData }) {
                         )}
 
                         {field.type === "select" && (
-                          <FormControl
-                            fullWidth
-                            variant="standard"
-                            sx={{ mt: 1 }}
-                          >
-                            <Select
-                              name={field.id}
-                              value={formik.values[field.id] ?? ""}
-                              onChange={formik.handleChange}
-                            >
+                          <FormControl fullWidth variant="standard" sx={{ mt: 1 }}>
+                            <Select name={field.id} value={formik.values[field.id] ?? ""} onChange={formik.handleChange}>
                               <MenuItem value="">
                                 <em>Select an option</em>
                               </MenuItem>
@@ -435,9 +368,7 @@ export default function FormPreview({ previewData }) {
                           <RadioGroup
                             name={field.id}
                             value={formik.values[field.id] ?? ""}
-                            onChange={(e) =>
-                              formik.setFieldValue(field.id, e.target.value)
-                            }
+                            onChange={(e) => formik.setFieldValue(field.id, e.target.value)}
                           >
                             {field.options.map((opt, i) => (
                               <FormControlLabel
@@ -471,30 +402,13 @@ export default function FormPreview({ previewData }) {
                                 key={i}
                                 control={
                                   <Checkbox
-                                    checked={
-                                      formik.values[field.id]?.includes(opt) ??
-                                      false
-                                    }
+                                    checked={formik.values[field.id]?.includes(opt) ?? false}
                                     onChange={(e) => {
-                                      const current =
-                                        formik.values[field.id] || [];
-                                      formik.setFieldValue(
-                                        field.id,
-                                        e.target.checked
-                                          ? [...current, opt]
-                                          : current.filter((v) => v !== opt)
-                                      );
+                                      const current = formik.values[field.id] || [];
+                                      formik.setFieldValue(field.id, e.target.checked ? [...current, opt] : current.filter((v) => v !== opt));
                                     }}
-                                    icon={
-                                      <RadioButtonUnchecked
-                                        sx={{ color: "gray" }}
-                                      />
-                                    }
-                                    checkedIcon={
-                                      <RadioButtonChecked
-                                        sx={{ color: "#673ab7" }}
-                                      />
-                                    }
+                                    icon={<RadioButtonUnchecked sx={{ color: "gray" }} />}
+                                    checkedIcon={<RadioButtonChecked sx={{ color: "#673ab7" }} />}
                                   />
                                 }
                                 label={opt}
@@ -531,13 +445,8 @@ export default function FormPreview({ previewData }) {
                               gap: 1,
                             }}
                           >
-                            <Typography
-                              variant="body2"
-                              color="text.secondary"
-                              sx={{ mb: 2 }}
-                            >
-                              Upload 1 supported file: PDF, document, or image.
-                              Max {field.maxSize / 1024 / 1024} MB.
+                            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                              Upload 1 supported file: PDF, document, or image. Max {field.maxSize / 1024 / 1024} MB.
                             </Typography>
 
                             {/* Upload button */}
@@ -592,20 +501,11 @@ export default function FormPreview({ previewData }) {
                   variant="contained"
                   color="primary"
                   // Disable submit if preview mode or OTP not verified when required
-                  disabled={
-                    Boolean(previewData) ||
-                    (!previewData && schema.emailVerification
-                      ? !otpVerified
-                      : false)
-                  }
+                  disabled={Boolean(previewData) || (!previewData && schema.emailVerification ? !otpVerified : false)}
                 >
                   Submit
                 </Button>
-                <Button
-                  type="reset"
-                  variant="text"
-                  onClick={formik.handleReset}
-                >
+                <Button type="reset" variant="text" onClick={formik.handleReset}>
                   Clear form
                 </Button>
               </Box>
@@ -618,11 +518,7 @@ export default function FormPreview({ previewData }) {
             <Typography>Your form has been submitted successfully.</Typography>
           </DialogContent>
           <DialogActions>
-            <Button
-              onClick={handleCloseDialog}
-              variant="contained"
-              color="primary"
-            >
+            <Button onClick={handleCloseDialog} variant="contained" color="primary">
               OK
             </Button>
           </DialogActions>
