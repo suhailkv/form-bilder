@@ -90,6 +90,7 @@ const loaderStyle = {
 };
 
 export default function QuestionBuilder() {
+  const [formIdAfterSave, setFormIdAfterSave] = useState(null); // New state for formId after save
   const theme = useTheme();
   const isXs = useMediaQuery(theme.breakpoints.down("sm"));
   const isXsOrSm = useMediaQuery(theme.breakpoints.down("sm"));
@@ -393,12 +394,13 @@ export default function QuestionBuilder() {
         await dispatch(updateForm({ formId, payload: schema })).unwrap();
       } else {
         const result = await dispatch(createForm(schema)).unwrap();
+        setFormIdAfterSave(result.id);
         
         // Navigate to the new form's URL after creation
-        if (result._id || result.id) {
-          const newFormId = result._id || result.id;
-          navigate(`/`, { replace: true });
-        }
+        // if (result._id || result.id) {
+        //   const newFormId = result._id || result.id;
+        //   navigate(`/`, { replace: true });
+        // }
       }
       setSaveSuccess(true);
     } catch (err) {
@@ -685,7 +687,7 @@ export default function QuestionBuilder() {
                 <VisibilityIcon sx={{ color: "#959698", fontSize: { xs: 18, sm: 20, md: 24 } }} />
               </IconButton>
             </Tooltip>
-            <Publish />
+            <Publish  formId={formIdAfterSave}/>
             <IconButton size="small">
               <MoreVertIcon sx={{ color: "#959698", fontSize: { xs: 18, sm: 20, md: 24 } }} />
             </IconButton>

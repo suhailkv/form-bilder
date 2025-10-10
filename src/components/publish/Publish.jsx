@@ -17,9 +17,9 @@ import { publishForm } from "../../redux/features/formCreationSlice";
 import { BACKEND_URL } from "../../utils/const";
 
 
-export const Publish = () => {
+export const Publish = ({formId}) => {
   const dispatch = useDispatch();
-  const { formId } = useParams(); // Get formId from URL params
+  // const { formId } = useParams(); // Get formId from URL params
   const { loading, error, schema } = useSelector((state) => state.formCreation);
 
   const [open, setOpen] = useState(false);
@@ -66,6 +66,7 @@ export const Publish = () => {
   const handleClose = () => {
     setOpen(false);
     setPublishedLink(null);
+    dis                                                  
     setCopied(false);
   };
 
