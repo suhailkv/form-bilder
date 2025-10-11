@@ -29,105 +29,43 @@ export const createNewField = (type, id) => {
     case "checkbox":
       return { ...baseField, defaultChecked: false };
     case "uploadFile":
-      return { ...baseField, accept: "", maxSize: "" }; // Optional: Add accept and maxSize
+      return { ...baseField, accept: "", maxSize: "" };
     default:
       return baseField;
   }
 };
 
-export const defaultFormSchema = {
-  title: "Sample Form with Conditional Logic",
-  description: "This form demonstrates conditional field rendering",
-  fields: [
-    {
-      id: "q1",
-      type: "select",
-      label: "Do you have a car?",
-      required: true,
-      options: ["Yes", "No"],
-      conditions: [],
-    },
-    {
-      id: "q2",
-      type: "text",
-      label: "Which model do you have?",
-      placeholder: "e.g., Toyota Camry",
-      required: false,
-      conditions: [{ field: "q1", value: "Yes" }],
-    },
-    {
-      id: "q3",
-      type: "select",
-      label: "Do you want a loan?",
-      required: true,
-      options: ["Yes", "No"],
-      conditions: [],
-    },
-    {
-      id: "q4",
-      type: "select",
-      label: "How much money do you want?",
-      required: false,
-      options: ["1 Lakh", "2 Lakhs"],
-      conditions: [{ field: "q3", value: "Yes" }],
-    },
- {
-      id: "q1",
-      type: "multipleChoice",
-      label: "Favorite Food",
-      required: true,
-      options: ["Pizza", "Burger", "Biriyani", "Pasta", "Other"],
-      conditions: [],
-    },
-    {
-      id: "q2",
-      type: "uploadFile",
-      label: "Upload Image",
-      required: false,
-      accept: "image/*", // allow images only
-      maxSize: 5 * 1024 * 1024, // 5 MB
-      conditions: [],
-    },
-  ],
-};
-
-
-
-
-
-
-
+// Determine if a field should render based on conditional logic
 export const evaluateConditions = (field, formData) => {
-  if (!field.conditions || field.conditions.length === 0) {
-    return true; // Show fields with no conditions
-  }
+  if (!field.conditions || field.conditions.length === 0) return true; // Show if no conditions
 
-  const result = field.conditions.every((condition) => {
+  return field.conditions.every((condition) => {//AND condition only
     const fieldValue = formData[condition.field];
-    console.log(`Evaluating condition for field ${field.id}:`, {
-      conditionField: condition.field,
-      conditionValue: condition.value,
-      currentFieldValue: fieldValue,
-    });
-    // If the field has no response or is empty, hide conditional fields
-    if (fieldValue === undefined || fieldValue === null || fieldValue === "") {
-      return false;
+    const expectedValue = condition.value;
+
+    // Hide if controller field has no value
+    if (fieldValue === undefined || fieldValue === null || fieldValue === "") return false;
+
+    if (typeof fieldValue === "boolean") {
+      const expectedBool = expectedValue === "true";
+      return fieldValue === expectedBool;
     }
-    // For multipleChoice (array-based), check if the condition value is included
+
     if (Array.isArray(fieldValue)) {
-      return fieldValue.includes(condition.value);
+      return fieldValue.includes(expectedValue);
     }
-    // For uploadFile, check if a file is present (true/false)
+
+    if (!isNaN(fieldValue) && !isNaN(expectedValue)) {
+      return Number(fieldValue) === Number(expectedValue);
+    }
+
     if (field.type === "uploadFile") {
-      return fieldValue ? condition.value === "true" : condition.value === "false";
+      return !!fieldValue === (expectedValue === "true");
     }
-    // For select, radio, text, etc., compare directly
-    return fieldValue === condition.value;
+
+    return String(fieldValue).trim() === String(expectedValue).trim();
   });
-
-  return result;
 };
 
-export const getAvailableFieldsForConditions = (fields, currentFieldId) => {
-  return fields.filter((field) => field.id !== currentFieldId);
-};
+export const getAvailableFieldsForConditions = (fields, currentFieldId) =>
+  fields.filter((f) => f.id !== currentFieldId);
