@@ -1,47 +1,68 @@
-import * as React from 'react';
-import { Slot } from '@radix-ui/react-slot';
-import { cva } from 'class-variance-authority';
+import React from "react";
+import { Button as MUIButton } from "@mui/material";
 
-import { cn } from '@/lib/utils';
+/**
+ * Custom Button — Radix-free, CVA-free replacement
+ * 
+ * Props:
+ * - variant: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link"
+ * - size: "default" | "sm" | "lg" | "icon"
+ * - asChild: optional (renders <a> or <div> instead of <button>)
+ * - className: optional extra styles
+ */
+const Button = React.forwardRef(
+  ({ className = "", variant = "default", size = "default", asChild = false, children, ...props }, ref) => {
+    const commonStyles = {
+      borderRadius: "6px",
+      textTransform: "none",
+      fontWeight: 500,
+      transition: "all 0.2s ease",
+      display: "inline-flex",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: "8px",
+    };
 
-const buttonVariants = cva(
-  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0',
-  {
-    variants: {
-      variant: {
-        default: 'bg-primary text-primary-foreground hover:bg-primary/90',
-        destructive: 'bg-destructive text-destructive-foreground hover:bg-destructive/90',
-        outline: 'border border-input bg-background hover:bg-accent hover:text-accent-foreground',
-        secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
-        ghost: 'hover:bg-accent hover:text-accent-foreground',
-        link: 'text-primary underline-offset-4 hover:underline',
-      },
-      size: {
-        default: 'h-10 px-4 py-2',
-        sm: 'h-9 rounded-md px-3',
-        lg: 'h-11 rounded-md px-8',
-        icon: 'h-10 w-10',
-      },
-    },
-    defaultVariants: {
-      variant: 'default',
-      size: 'default',
-    },
+    // ✅ Variants (same as original)
+    const variantStyles = {
+      default: { backgroundColor: "#1976d2", color: "#fff", "&:hover": { backgroundColor: "#1565c0" } },
+      destructive: { backgroundColor: "#d32f2f", color: "#fff", "&:hover": { backgroundColor: "#b71c1c" } },
+      outline: { border: "1px solid #ccc", backgroundColor: "#fff", color: "#333", "&:hover": { backgroundColor: "#f9f9f9" } },
+      secondary: { backgroundColor: "#9c27b0", color: "#fff", "&:hover": { backgroundColor: "#7b1fa2" } },
+      ghost: { backgroundColor: "transparent", color: "#333", "&:hover": { backgroundColor: "rgba(0,0,0,0.04)" } },
+      link: { backgroundColor: "transparent", color: "#1976d2", textDecoration: "underline", "&:hover": { color: "#004ba0" } },
+    };
+
+    // ✅ Sizes
+    const sizeStyles = {
+      default: { padding: "8px 16px", fontSize: "0.9rem", height: "40px" },
+      sm: { padding: "6px 12px", fontSize: "0.8rem", height: "36px" },
+      lg: { padding: "10px 20px", fontSize: "1rem", height: "44px" },
+      icon: { padding: "0", width: "40px", height: "40px", fontSize: "1.1rem" },
+    };
+
+    const Comp = asChild ? "span" : MUIButton;
+
+    return (
+      <Comp
+        ref={ref}
+        disableElevation
+        disableRipple
+        sx={{
+          ...commonStyles,
+          ...variantStyles[variant],
+          ...sizeStyles[size],
+          ...props.sx, // allow sx override
+        }}
+        className={className}
+        {...props}
+      >
+        {children}
+      </Comp>
+    );
   }
 );
 
-/**
- * @typedef {Object} ButtonProps
- * @property {boolean} [asChild]
- * @property {string} [className]
- * @property {string} [variant]
- * @property {string} [size]
- * // ...other button props
- */
-const Button = React.forwardRef(({ className, variant, size, asChild = false, ...props }, ref) => {
-  const Comp = asChild ? Slot : 'button';
-  return <Comp className={cn(buttonVariants({ variant, size, className }))} ref={ref} {...props} />;
-});
-Button.displayName = 'Button';
+Button.displayName = "Button";
 
-export { Button, buttonVariants };
+export { Button };
