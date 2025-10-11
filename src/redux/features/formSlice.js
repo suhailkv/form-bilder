@@ -8,7 +8,7 @@ const initialState = {
   error: null,
   email: "",
   otpSent: false,
-  otpVerified: true,
+  otpVerified: false,
 };
 
 // 1️⃣ Fetch form
