@@ -1,25 +1,66 @@
-import * as React from 'react';
-import * as TooltipPrimitive from '@radix-ui/react-tooltip';
+import React, { createContext, useContext, useState } from "react";
+import { useTheme } from "@mui/material/styles";
 
-import { cn } from '@/lib/utils';
+// Context for managing tooltip visibility globally
+const TooltipContext = createContext();
 
-const TooltipProvider = TooltipPrimitive.Provider;
+export const TooltipProvider = ({ children }) => {
+  const [tooltip, setTooltip] = useState(null);
+  return (
+    <TooltipContext.Provider value={{ tooltip, setTooltip }}>
+      {children}
+      <TooltipContent />
+    </TooltipContext.Provider>
+  );
+};
 
-const Tooltip = TooltipPrimitive.Root;
+// Tooltip wrapper (for structure)
+export const Tooltip = ({ children }) => <>{children}</>;
 
-const TooltipTrigger = TooltipPrimitive.Trigger;
+// Tooltip Trigger – listens for hover events
+export const TooltipTrigger = ({ children, message }) => {
+  const { setTooltip } = useContext(TooltipContext);
 
-const TooltipContent = React.forwardRef(({ className, sideOffset = 4, ...props }, ref) => (
-  <TooltipPrimitive.Content
-    ref={ref}
-    sideOffset={sideOffset}
-    className={cn(
-      'z-50 overflow-hidden rounded-md border bg-popover px-3 py-1.5 text-sm text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2',
-      className
-    )}
-    {...props}
-  />
-));
-TooltipContent.displayName = TooltipPrimitive.Content.displayName;
+  return (
+    <span
+      onMouseEnter={(e) =>
+        setTooltip({
+          message,
+          target: e.target.getBoundingClientRect(),
+        })
+      }
+      onMouseLeave={() => setTooltip(null)}
+      style={{ cursor: "help", display: "inline-flex" }}
+    >
+      {children}
+    </span>
+  );
+};
 
-export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider };
+// Tooltip Content – the actual bubble
+export const TooltipContent = () => {
+  const { tooltip } = useContext(TooltipContext);
+  const theme = useTheme();
+
+  if (!tooltip) return null;
+
+  const styles = {
+    position: "fixed",
+    top: tooltip.target?.bottom + 6,
+    left: tooltip.target?.left,
+    background:
+      theme.palette.mode === "dark"
+        ? "rgba(255,255,255,0.9)"
+        : "rgba(33,33,33,0.9)",
+    color: theme.palette.mode === "dark" ? "#000" : "#fff",
+    padding: "6px 10px",
+    borderRadius: "4px",
+    fontSize: "12px",
+    pointerEvents: "none",
+    zIndex: 9999,
+    boxShadow: "0 2px 6px rgba(0,0,0,0.25)",
+    animation: "fadeIn 0.2s ease-in-out",
+  };
+
+  return <div style={styles}>{tooltip.message}</div>;
+};
