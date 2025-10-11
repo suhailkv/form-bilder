@@ -13,7 +13,7 @@ const initialState = {
 // 1️⃣ Fetch form
 export const fetchForm = createAsyncThunk("form/fetchForm", async (formId, { rejectWithValue }) => {
   try {
-    const res = await axios.get(`${BACKEND_URL}/form/${formId}`);
+    const res = await axios.get(`${BACKEND_URL}/forms/${formId}`);
     return res.data.data;
   } catch (err) {
     return rejectWithValue(err.response?.data?.message || err.message);
@@ -23,7 +23,7 @@ export const fetchForm = createAsyncThunk("form/fetchForm", async (formId, { rej
 // 2️⃣ Request OTP
 export const requestOtp = createAsyncThunk("form/requestOtp", async ({ formId, email }, { rejectWithValue }) => {
   try {
-    const res = await axios.post(`${BACKEND_URL}/form/${formId}/request-otp`, { email });
+    const res = await axios.post(`${BACKEND_URL}/forms/${formId}/request-otp`, { email });
     return { email, message: res.data.message };
   } catch (err) {
     return rejectWithValue(err.response?.data?.message || err.message);
@@ -33,7 +33,7 @@ export const requestOtp = createAsyncThunk("form/requestOtp", async ({ formId, e
 // 3️⃣ Verify OTP
 export const verifyOtp = createAsyncThunk("form/verifyOtp", async ({ email, otp, formToken }, { rejectWithValue }) => {
   try {
-    const res = await axios.post(`${BACKEND_URL}/form/${formToken}/verify-otp`, {
+    const res = await axios.post(`${BACKEND_URL}/forms/${formToken}/verify-otp`, {
       email,
       otp,
       formToken,
