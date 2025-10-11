@@ -1,7 +1,10 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
+
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+
 const initialState = {
+  formLoading: false, 
   loading: false,
   formData: {},
   error: null,
@@ -74,17 +77,17 @@ const formSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // fetch form
+      // 🔹 Fetch form (controls skeleton)
       .addCase(fetchForm.pending, (state) => {
-        state.loading = true;
+        state.formLoading = true;
         state.error = null;
       })
       .addCase(fetchForm.fulfilled, (state, action) => {
-        state.loading = false;
+        state.formLoading = false;
         state.formData = action.payload;
       })
       .addCase(fetchForm.rejected, (state, action) => {
-        state.loading = false;
+        state.formLoading = false;
         state.error = action.payload || "Failed to fetch form";
       })
 
