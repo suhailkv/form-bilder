@@ -636,47 +636,42 @@ export default function FormPreview({ previewData }) {
 
   /* ---------- banner rendering helper ---------- */
   const renderBanner = useCallback(() => {
-    const bannerFile =
-      previewData?.bannerImage ||
-      formData?.bannerImage ||
-      previewData?.bannerImageFilename ||
-      formData?.bannerImageFilename;
-    if (!bannerFile) return null;
+  const bannerFile =
+    previewData?.bannerImage ||
+    formData?.bannerImage ||
+    previewData?.bannerImageFilename ||
+    formData?.bannerImageFilename;
+  if (!bannerFile) return null;
 
-    return (
+  return (
+    <Box
+      sx={{
+        mb: 3,
+        overflow: "hidden",
+        borderRadius: { xs: 2, sm: 3 },
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundColor: "#fff",
+      }}
+    >
       <Box
+        component="img"
+        src={`${BACKEND_URL}${FILE_PATH}${bannerFile}`}
+        alt="Banner"
+        loading="lazy"
         sx={{
-          mb: 3,
-          overflow: "hidden",
-          borderTopLeftRadius: 6,
-          borderTopRightRadius: 6,
-          borderBottomLeftRadius: 0,
-          borderBottomRightRadius: 0,
+          width: "100%",
+          height: "auto", 
+          maxHeight: { xs: 320, sm: 420, md: 600 }, 
+          objectFit: "contain",
+          display: "block",
         }}
-      >
-        <Box
-          component="img"
-          src={`${BACKEND_URL}${FILE_PATH}${bannerFile}`}
-          alt="Banner"
-          loading="lazy"
-          sx={{
-            width: "100%",
-            height: { xs: 140, sm: 180, md: 220 },
-            objectFit: "cover",
-            display: "block",
-          }}
-        />
-        <Box
-          sx={{
-            height: 44,
-            mt: -7,
-            background:
-              "linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(246,244,251,1) 90%)",
-          }}
-        />
-      </Box>
-    );
-  }, [previewData, formData]);
+      />
+    </Box>
+  );
+}, [previewData, formData]);
+
 
   const isFormReady = !formLoading && Boolean(schema?.fields);
   const showTopProgress = formLoading || loading;
@@ -703,11 +698,10 @@ export default function FormPreview({ previewData }) {
     );
   }
 
-  return (
+    return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
 
-      {/* top linear progress when fetching or performing actions */}
       {showTopProgress && (
         <LinearProgress
           color="primary"
@@ -728,7 +722,8 @@ export default function FormPreview({ previewData }) {
         sx={{
           minHeight: "100vh",
           background: "linear-gradient(135deg,#f7f1ff 0%,#f1eefe 100%)",
-          py: 6,
+          py: { xs: 4, sm: 6 },
+          px: { xs: 2, sm: 0 },
           display: "flex",
           justifyContent: "center",
           fontFamily: '"Inter", Roboto, Arial, sans-serif',
@@ -739,72 +734,189 @@ export default function FormPreview({ previewData }) {
           {renderBanner()}
 
           {/* Title card */}
-          <Paper sx={{ p: 3, mb: 3, borderTop: `6px solid ${CONFIG.COLORS.PRIMARY}` }}>
-            <Typography variant="h5" sx={{ fontWeight: 600, mb: 0.5 }}>
+          <Paper
+            sx={{
+              p: { xs: 2, sm: 3 },
+              mb: 3,
+              borderTop: `6px solid ${CONFIG.COLORS.PRIMARY}`,
+            }}
+          >
+            <Typography
+              variant="h5"
+              sx={{
+                fontWeight: 600,
+                mb: 0.5,
+                fontSize: { xs: "1.1rem", sm: "1.25rem" },
+              }}
+            >
               {schema?.title || "Untitled form"}
             </Typography>
-            <Typography variant="body2" color="text.secondary">
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{ fontSize: { xs: "0.85rem", sm: "0.9rem" } }}
+            >
               {schema?.description || ""}
             </Typography>
           </Paper>
 
-          {/* Email verification - special compact section above fields */}
+          {/* Email verification */}
           {!previewData && schema?.emailVerification && (
-            <Paper sx={{ p: 2, mb: 3, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 2 }}>
-              {/* left: messages */}
+            <Paper
+              sx={{
+                p: { xs: 2, sm: 2.5 },
+                mb: 3,
+                display: "flex",
+                flexDirection: { xs: "column", sm: "row" },
+                alignItems: { xs: "stretch", sm: "center" },
+                justifyContent: "space-between",
+                gap: 2,
+              }}
+            >
+              {/* Left message section */}
               <Box sx={{ flex: 1 }}>
                 {otpVerified ? (
-                  <Chip label="Email verified" color="success" sx={{ fontWeight: 600 }} />
+                  <Chip
+                    label="Email verified"
+                    color="success"
+                    sx={{ fontWeight: 600 }}
+                  />
                 ) : (
                   <>
-                    <Typography variant="body2" sx={{ mb: 1, fontWeight: 600 }}>
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        mb: 1,
+                        fontWeight: 600,
+                        textAlign: { xs: "center", sm: "left" },
+                      }}
+                    >
                       Verify your email
                     </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      We will send an OTP to your email address to verify your identity.
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{
+                        textAlign: { xs: "center", sm: "left" },
+                        fontSize: { xs: "0.85rem", sm: "0.9rem" },
+                      }}
+                    >
+                      We will send an OTP to your email address to verify your
+                      identity.
                     </Typography>
                   </>
                 )}
               </Box>
 
-              {/* right: inputs / actions */}
-              <Box sx={{ minWidth: 240, display: "flex", gap: 1, alignItems: "center", justifyContent: "flex-end" }}>
+              {/* Right side: input/actions */}
+              <Box
+                sx={{
+                  minWidth: { xs: "100%", sm: 240 },
+                  display: "flex",
+                  flexDirection: { xs: "column", sm: "row" },
+                  gap: 1,
+                  alignItems: "center",
+                  justifyContent: "flex-end",
+                }}
+              >
+                {/* Email entry + send */}
                 {!otpSent && !otpVerified && (
                   <>
-                    <TextField size="small" value={email} onChange={(e) => dispatch(setEmail(e.target.value))} placeholder="you@example.com" sx={{ minWidth: 200 }} />
-                    <Button variant="contained" onClick={handleRequestOtp} disabled={loading} sx={{ px: 2 }}>
-                      {loading ? <CircularProgress size={18} sx={{ color: "#fff" }} /> : "Send"}
+                    <TextField
+                      size="small"
+                      fullWidth
+                      value={email}
+                      onChange={(e) => dispatch(setEmail(e.target.value))}
+                      placeholder="you@example.com"
+                    />
+                    <Button
+                      variant="contained"
+                      onClick={handleRequestOtp}
+                      disabled={loading}
+                      sx={{ px: { xs: 2, sm: 2.5 }, width: { xs: "100%", sm: "auto" } }}
+                    >
+                      {loading ? (
+                        <CircularProgress size={18} sx={{ color: "#fff" }} />
+                      ) : (
+                        "Send"
+                      )}
                     </Button>
                   </>
                 )}
 
+                {/* OTP entry + verify + resend */}
                 {otpSent && !otpVerified && (
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "nowrap" }}>
-                    <TextField size="small" value={otp} onChange={(e) => setOtp(e.target.value)} placeholder="Enter OTP" sx={{ minWidth: 150, flexShrink: 0 }} />
-                    <Button variant="contained" color="success" onClick={handleVerifyOtp} disabled={loading} sx={{ px: 2, flexShrink: 0 }}>
-                      {loading ? <CircularProgress size={18} sx={{ color: "#fff" }} /> : "Verify"}
+                  <Box
+                    sx={{
+                      display: "flex",
+                      flexDirection: { xs: "column", sm: "row" },
+                      alignItems: "center",
+                      gap: { xs: 1, sm: 1 },
+                      width: "100%",
+                    }}
+                  >
+                    <TextField
+                      size="small"
+                      value={otp}
+                      onChange={(e) => setOtp(e.target.value)}
+                      placeholder="Enter OTP"
+                      sx={{
+                        minWidth: { xs: "100%", sm: 150 },
+                        flexShrink: 0,
+                      }}
+                    />
+                    <Button
+                      variant="contained"
+                      color="success"
+                      onClick={handleVerifyOtp}
+                      disabled={loading}
+                      sx={{
+                        px: 2,
+                        flexShrink: 0,
+                        width: { xs: "100%", sm: "auto" },
+                      }}
+                    >
+                      {loading ? (
+                        <CircularProgress size={18} sx={{ color: "#fff" }} />
+                      ) : (
+                        "Verify"
+                      )}
                     </Button>
 
-                    {/* resend / countdown */}
                     <Typography
                       variant="body2"
                       sx={{
-                        minWidth: 100,
-                        textAlign: "right",
-                        flexShrink: 0,
-                        color: resendCountdown > 0 ? "text.secondary" : "primary.main",
+                        mt: { xs: 1, sm: 0 },
+                        minWidth: { xs: "100%", sm: 100 },
+                        textAlign: { xs: "center", sm: "right" },
+                        color:
+                          resendCountdown > 0
+                            ? "text.secondary"
+                            : "primary.main",
                         fontWeight: resendCountdown > 0 ? 400 : 600,
-                        cursor: resendCountdown > 0 ? "default" : "pointer",
+                        cursor:
+                          resendCountdown > 0 ? "default" : "pointer",
                       }}
-                      onClick={resendCountdown > 0 ? undefined : handleResendOtp}
+                      onClick={
+                        resendCountdown > 0 ? undefined : handleResendOtp
+                      }
                     >
-                      {resendCountdown > 0 ? `Resend in ${resendCountdown}s` : "Resend OTP"}
+                      {resendCountdown > 0
+                        ? `Resend in ${resendCountdown}s`
+                        : "Resend OTP"}
                     </Typography>
                   </Box>
                 )}
 
                 {otpVerified && (
-                  <Typography variant="body2" sx={{ color: "success.main", fontWeight: 600 }}>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: "success.main",
+                      fontWeight: 600,
+                      textAlign: { xs: "center", sm: "left" },
+                    }}
+                  >
                     Verified ✓
                   </Typography>
                 )}
@@ -812,23 +924,27 @@ export default function FormPreview({ previewData }) {
             </Paper>
           )}
 
-          {/* Form fields */}
+          {/* FORM FIELDS*/}
           <FormikProvider value={formik}>
             {!openDialog ? (
               <Form onSubmit={formik.handleSubmit}>
                 {mountedFields.map((mountItem) => {
-                  const field = schema?.fields?.find((f) => f.id === mountItem.id);
+                  const field = schema?.fields?.find(
+                    (f) => f.id === mountItem.id
+                  );
                   if (!field) return null;
 
-                  // determine visual state
-                  const state = mountItem.state; // 'entering' | 'present' | 'leaving'
+                  const state = mountItem.state;
                   const isLeaving = state === "leaving";
                   const opacity = state === "present" ? 1 : 0;
                   const translateY = state === "present" ? "0px" : "-8px";
 
-                  // compute whether this field is currently one of the visibleFields and its index
-                  const visibleIndex = visibleFields.findIndex((f) => f.id === field.id);
-                  const showDivider = visibleIndex !== -1 && visibleIndex < visibleFields.length - 1;
+                  const visibleIndex = visibleFields.findIndex(
+                    (f) => f.id === field.id
+                  );
+                  const showDivider =
+                    visibleIndex !== -1 &&
+                    visibleIndex < visibleFields.length - 1;
 
                   return (
                     <Box
@@ -838,19 +954,27 @@ export default function FormPreview({ previewData }) {
                         opacity,
                         transform: `translateY(${translateY})`,
                         pointerEvents: isLeaving ? "none" : "auto",
-                        mb: isLeaving ? `${CONFIG.ANIMATION_DURATION / 1000 * 0.5}rem` : 2.5,
+                        mb: isLeaving
+                          ? `${CONFIG.ANIMATION_DURATION / 1000}rem`
+                          : 2.5,
                       }}
                     >
                       <Paper
                         sx={{
-                          p: 2.5,
+                          p: { xs: 2, sm: 2.5 },
                           borderLeft: `4px solid ${CONFIG.COLORS.PRIMARY}`,
                           backgroundColor: "#fff",
                           boxShadow: "0 2px 6px rgba(0,0,0,0.04)",
                         }}
                       >
                         {field.type !== "checkbox" && (
-                          <Typography variant="subtitle1" sx={{ mb: 1 }}>
+                          <Typography
+                            variant="subtitle1"
+                            sx={{
+                              mb: 1,
+                              fontSize: { xs: "0.95rem", sm: "1rem" },
+                            }}
+                          >
                             {field.label}
                           </Typography>
                         )}
@@ -862,35 +986,115 @@ export default function FormPreview({ previewData }) {
                           setFileAndItsFilePath={setFileAndItsFilePath}
                         />
 
-                        {showDivider && <Divider sx={{ mt: 2, borderColor: "#eee" }} />}
+                        {showDivider && (
+                          <Divider sx={{ mt: 2, borderColor: "#eee" }} />
+                        )}
                       </Paper>
                     </Box>
                   );
                 })}
 
-                <Box mt={3} display="flex" justifyContent="space-between" sx={{ px: 0 }}>
+                <Box
+                  mt={3}
+                  display="flex"
+                  justifyContent="space-between"
+                  sx={{
+                    flexDirection: { xs: "column", sm: "row" },
+                    gap: { xs: 1.5, sm: 0 },
+                  }}
+                >
                   <Button
                     type="submit"
                     variant="contained"
-                    sx={{ backgroundColor: CONFIG.COLORS.PRIMARY, px: 3 }}
-                    disabled={Boolean(previewData) || (!previewData && schema.emailVerification && !otpVerified) || loading}
+                    sx={{
+                      backgroundColor: CONFIG.COLORS.PRIMARY,
+                      px: 3,
+                      width: { xs: "100%", sm: "auto" },
+                    }}
+                    disabled={
+                      Boolean(previewData) ||
+                      (!previewData &&
+                        schema.emailVerification &&
+                        !otpVerified) ||
+                      loading
+                    }
                   >
-                    {loading ? <><CircularProgress size={18} sx={{ color: "#fff" }} /> &nbsp;Submitting...</> : "Submit Form"}
+                    {loading ? (
+                      <>
+                        <CircularProgress
+                          size={18}
+                          sx={{ color: "#fff" }}
+                        />{" "}
+                        &nbsp;Submitting...
+                      </>
+                    ) : (
+                      "Submit"
+                    )}
                   </Button>
 
-                  <Button type="reset" variant="text" onClick={formik.handleReset} sx={{ color: CONFIG.COLORS.PRIMARY, fontWeight: 600 }}>
+                  <Button
+                    type="reset"
+                    variant="text"
+                    onClick={formik.handleReset}
+                    sx={{
+                      color: CONFIG.COLORS.PRIMARY,
+                      fontWeight: 600,
+                      width: { xs: "100%", sm: "auto" },
+                    }}
+                  >
                     Clear form
                   </Button>
                 </Box>
               </Form>
             ) : (
-              <Paper sx={{ p: 6, mt: 3, textAlign: "center" }}>
-                <Box sx={{ width: 88, height: 88, borderRadius: "50%", background: CONFIG.COLORS.PRIMARY, mx: "auto", mb: 2, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 32 }}>
+              <Paper sx={{ p: { xs: 4, sm: 6 }, mt: 3, textAlign: "center" }}>
+                <Box
+                  sx={{
+                    width: 88,
+                    height: 88,
+                    borderRadius: "50%",
+                    background: CONFIG.COLORS.PRIMARY,
+                    mx: "auto",
+                    mb: 2,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "#fff",
+                    fontSize: 32,
+                  }}
+                >
                   ✓
                 </Box>
-                <Typography variant="h5" sx={{ mb: 1, fontWeight: 600 }}>{schema?.title || "Form Submitted"}</Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>{schema?.thankYouMessage || "Your response has been recorded."}</Typography>
-                <Button variant="outlined" onClick={() => window.location.reload()} sx={{ borderRadius: 1, px: 3 }}>
+                <Typography
+                  variant="h5"
+                  sx={{
+                    mb: 1,
+                    fontWeight: 600,
+                    fontSize: { xs: "1.1rem", sm: "1.25rem" },
+                  }}
+                >
+                  {schema?.title || "Form Submitted"}
+                </Typography>
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{
+                    mb: 3,
+                    fontSize: { xs: "0.9rem", sm: "1rem" },
+                  }}
+                >
+                  {schema?.thankYouMessage ||
+                    "Your response has been recorded."}
+                </Typography>
+                <Button
+                  variant="outlined"
+                  onClick={() => window.location.reload()}
+                  sx={{
+                    borderRadius: 1,
+                    px: 3,
+                    width: { xs: "100%", sm: "auto" },
+                  }}
+                >
                   Submit another response
                 </Button>
               </Paper>
@@ -900,6 +1104,7 @@ export default function FormPreview({ previewData }) {
       </Box>
     </ThemeProvider>
   );
+
 }
 
 
