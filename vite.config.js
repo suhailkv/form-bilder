@@ -31,7 +31,11 @@ export default defineConfig({
     cssCodeSplit: true, // split CSS for faster load
     assetsInlineLimit: 4096, // inline small assets <4kb
   },
-
+optimization: {
+  usedExports: true,
+  sideEffects: true,
+  minimize: true,
+},
   optimizeDeps: {
     include: [
       "react",
