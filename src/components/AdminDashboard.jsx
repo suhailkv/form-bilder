@@ -20,7 +20,7 @@ import {
 import { Assignment, TrendingUp } from "@mui/icons-material";
 import { DataGrid } from "@mui/x-data-grid";
 
-import tabledata from "../data/tabledata.json"; // ✅ your sample data
+import tabledata from "../Data/tabledata.json"; // ✅ your sample data
 import { exportToCsv, exportToExcel, exportToPdf } from "../utils/exportCsv";
 
 import { useNavigate } from "react-router-dom";
