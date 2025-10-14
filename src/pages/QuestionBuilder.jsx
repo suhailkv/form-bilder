@@ -1,4 +1,4 @@
-import React, { use, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   Box,
@@ -32,6 +32,7 @@ import {
   useMediaQuery,
   CircularProgress,
   Alert,
+  Popover, // Added Popover import
 } from "@mui/material";
 import { Publish } from "../components/publish/Publish";
 import {
@@ -129,7 +130,10 @@ const loaderStyle = {
 };
 
 export default function QuestionBuilder() {
-  const [formIdAfterSave, setFormIdAfterSave] = useState(null); // New state for formId after save
+  const [formIdAfterSave, setFormIdAfterSave] = useState(null);
+  const [focusedFieldId, setFocusedFieldId] = useState(null);
+  const [deleteAnchorEl, setDeleteAnchorEl] = useState(null); // Added for Popover
+  const [deleteQuestionId, setDeleteQuestionId] = useState(null); // Added for Popover
   const theme = useTheme();
   const isXs = useMediaQuery(theme.breakpoints.down("sm"));
   const isXsOrSm = useMediaQuery(theme.breakpoints.down("sm"));
@@ -171,7 +175,7 @@ export default function QuestionBuilder() {
       dispatch(resetSchema());
       dispatch(removeBannerImage());
     }
-  }, [formId]);
+  }, [formId, dispatch]);
 
   // Clear success message after 3 seconds
   useEffect(() => {
@@ -230,6 +234,7 @@ export default function QuestionBuilder() {
     const newQuestion = createNewField("multipleChoice");
     handleSchemaChange([...schema.fields, newQuestion], schema.thankYouMessage);
     dispatch(setFocusedQuestion(newQuestion.id));
+    setFocusedFieldId(newQuestion.id);
   };
 
   const handleQuestionTypeChange = (id, newType) => {
@@ -275,6 +280,7 @@ export default function QuestionBuilder() {
     const newOptions = [...currentOptions, "Other"];
     handleUpdateField(questionId, { options: newOptions });
   };
+  
 
   const handleRemoveOption = (questionId, optionIndex) => {
     const question = schema.fields.find((q) => q.id === questionId);
@@ -295,13 +301,24 @@ export default function QuestionBuilder() {
   };
 
   const handleDeleteField = (id) => {
-    if (window.confirm("Delete this question?")) {
-      const filtered = schema.fields.filter((q) => q.id !== id);
+    setDeleteQuestionId(id);
+    setDeleteAnchorEl(document.getElementById(`delete-button-${id}`));
+  };
+
+  const handleConfirmDelete = () => {
+    if (deleteQuestionId) {
+      const filtered = schema.fields.filter((q) => q.id !== deleteQuestionId);
       handleSchemaChange(filtered, schema.thankYouMessage);
-      if (focusedQuestion === id) dispatch(setFocusedQuestion(null));
-      if (conditionalLogicOpen === id) dispatch(setConditionalLogicOpen(null));
+      if (focusedQuestion === deleteQuestionId) dispatch(setFocusedQuestion(null));
+      if (conditionalLogicOpen === deleteQuestionId) dispatch(setConditionalLogicOpen(null));
     }
+    handleCloseDeletePopover();
     handleCloseMenu();
+  };
+
+  const handleCloseDeletePopover = () => {
+    setDeleteAnchorEl(null);
+    setDeleteQuestionId(null);
   };
 
   const handleToggleRequired = (id) => {
@@ -324,15 +341,12 @@ export default function QuestionBuilder() {
     handleUpdateField(id, { fileName: null, fileData: null });
   };
 
-  // Banner Image Upload Handler (Fixed)
   const handleBannerImageUpload = async (event) => {
     const file = event.target.files[0];
     if (!file) return;
 
-    // Clear previous errors
     dispatch(clearBannerError());
 
-    // Validate file type
     const validImageTypes = [
       "image/jpeg",
       "image/png",
@@ -347,7 +361,6 @@ export default function QuestionBuilder() {
       return;
     }
 
-    // Validate file size (5MB max)
     const maxSize = 5 * 1024 * 1024;
     if (file.size > maxSize) {
       dispatch({
@@ -357,19 +370,15 @@ export default function QuestionBuilder() {
       return;
     }
 
-    // Dispatch upload (now stores filename only, not base64)
     dispatch(uploadBannerImage(file));
   };
 
-  // Remove Banner Handler (Fixed)
   const handleRemoveBanner = () => {
     const filename = schema.bannerImageFilename;
 
     if (filename) {
-      // Delete from server
       dispatch(deleteBannerImage(filename));
     } else {
-      // Just clear local state
       dispatch(removeBannerImage());
     }
   };
@@ -425,7 +434,6 @@ export default function QuestionBuilder() {
 
   const handlePreviewToggle = () => dispatch(setShowPreview(!showPreview));
 
-  // Save Form Handler - UPDATED WITH NAVIGATION
   const handleSaveForm = async () => {
     if (!schema.title || schema.title.trim() === "") {
       alert("Please enter a form title");
@@ -441,12 +449,6 @@ export default function QuestionBuilder() {
       } else {
         const result = await dispatch(createForm(schema)).unwrap();
         setFormIdAfterSave(result.id);
-
-        // Navigate to the new form's URL after creation
-        // if (result._id || result.id) {
-        //   const newFormId = result._id || result.id;
-        //   navigate(`/`, { replace: true });
-        // }
       }
       setSaveSuccess(true);
     } catch (err) {
@@ -635,7 +637,6 @@ export default function QuestionBuilder() {
             py: { xs: 0.5, sm: 0.75, md: 1 },
           }}
         >
-         
           <Toolbar
             sx={{
               display: "flex",
@@ -668,7 +669,6 @@ export default function QuestionBuilder() {
                 {schema.title || "Untitled Form"} - Preview
               </Typography>
             </Box>
-           
             <Button
               variant="outlined"
               onClick={handlePreviewToggle}
@@ -697,7 +697,6 @@ export default function QuestionBuilder() {
         </Box>
       )}
 
-      {/* Success Alert */}
       {saveSuccess && (
         <Alert
           severity="success"
@@ -714,7 +713,6 @@ export default function QuestionBuilder() {
         </Alert>
       )}
 
-      {/* Error Alert */}
       {error && (
         <Alert
           severity="error"
@@ -763,8 +761,6 @@ export default function QuestionBuilder() {
               gap: { xs: 1, sm: 1.5, md: 2 },
             }}
           >
-
-         
             <TextSnippetIcon
               sx={{ color: "#7049b4", fontSize: { xs: 24, sm: 28, md: 32 } }}
             />
@@ -776,7 +772,6 @@ export default function QuestionBuilder() {
                 sx={{ fontSize: { md: "1.8rem" }, fontWeight: 600 }}
               />
             )}
-
             <Tooltip title={formId ? "Update Form" : "Save Form"} arrow>
               <IconButton
                 aria-label="save"
@@ -797,9 +792,7 @@ export default function QuestionBuilder() {
                 />
               </IconButton>
             </Tooltip>
-            
           </Box>
-          
           <Box
             sx={{
               display: "flex",
@@ -862,7 +855,6 @@ export default function QuestionBuilder() {
       <Box sx={containerStyles}>
         <MiniSideBar onAddQuestion={handleAddQuestion} />
 
-        {/* Header with Banner Upload */}
         <Paper sx={headerStyles}>
           <Box sx={{ mb: isXs ? 2 : 3, position: "relative" }}>
             {bannerImagePreviewUrl || schema.bannerImageFilename ? (
@@ -989,12 +981,11 @@ export default function QuestionBuilder() {
             placeholder="Form description"
             InputProps={{
               disableUnderline: true,
-              sx: { fontSize: isXs ? "0.9rem" : "1rem", color: "#666" },
+              sx: { fontSize: isXs ? "0.9 roem" : "1rem", color: "#666" },
             }}
           />
         </Paper>
 
-        {/* Email Verification Section */}
         <Paper sx={headerStyles}>
           <Box
             sx={{
@@ -1026,7 +1017,6 @@ export default function QuestionBuilder() {
           </Typography>
         </Paper>
 
-        {/* Thank You Message Section */}
         <Paper sx={headerStyles}>
           <Typography
             variant="subtitle1"
@@ -1052,7 +1042,6 @@ export default function QuestionBuilder() {
           />
         </Paper>
 
-        {/* Questions Rendering */}
         {schema.fields.map((q) => {
           const isFocused = focusedQuestion === q.id;
           const isConditionalOpen = conditionalLogicOpen === q.id;
@@ -1097,13 +1086,23 @@ export default function QuestionBuilder() {
                   fullWidth
                   value={q.label}
                   onChange={(e) => handleQuestionChange(q.id, e.target.value)}
-                  onFocus={() => dispatch(setFocusedQuestion(q.id))}
-                  placeholder="Question"
+                  onFocus={() => {
+                    setFocusedFieldId(q.id);
+                    dispatch(setFocusedQuestion(q.id));
+                  }}
+                  onBlur={() => setFocusedFieldId(null)}
+                  placeholder="Type here for question"
                   InputProps={{
                     disableUnderline: true,
                     sx: { fontSize: isXs ? "0.9rem" : "1rem", fontWeight: 500 },
                   }}
-                  sx={{ mb: isXs ? 1 : 0, mr: isXs ? 0 : 2 }}
+                  sx={{
+                    mb: isXs ? 1 : 0,
+                    mr: isXs ? 0 : 2,
+                    borderBottom: "2px solid",
+                    borderColor: focusedFieldId === q.id ? "#7049b4" : "transparent",
+                    transition: "border-color 0.3s ease",
+                  }}
                 />
                 <Box sx={{ width: isXs ? "100%" : "auto" }}>
                   <Select
@@ -1222,7 +1221,8 @@ export default function QuestionBuilder() {
                     </Button>
                   </Box>
                 </Box>
-              )}
+              )} 
+              
 
               {(q.type === "text" || q.type === "number") && (
                 <Box sx={{ p: isXs ? 1 : 2, pl: isXs ? 2 : 4 }}>
@@ -1298,6 +1298,7 @@ export default function QuestionBuilder() {
                       onChange={(updatedField) =>
                         handleConditionalLogicChange(q.id, updatedField)
                       }
+                      onClose={() => dispatch(setConditionalLogicOpen(null))}
                     />
                   </Paper>
                 </Box>
@@ -1324,6 +1325,7 @@ export default function QuestionBuilder() {
                     </Tooltip>
                     <Tooltip title="Delete">
                       <IconButton
+                        id={`delete-button-${q.id}`}
                         size="small"
                         onClick={() => handleDeleteField(q.id)}
                         sx={{ "&:hover": { color: "error.main" } }}
@@ -1405,6 +1407,46 @@ export default function QuestionBuilder() {
             </Paper>
           );
         })}
+
+        <Popover
+          open={Boolean(deleteAnchorEl)}
+          anchorEl={deleteAnchorEl}
+          onClose={handleCloseDeletePopover}
+          anchorOrigin={{
+            vertical: "bottom",
+            horizontal: "center",
+          }}
+          transformOrigin={{
+            vertical: "top",
+            horizontal: "center",
+          }}
+          sx={
+            {zIndex: 3000}
+          }
+        >
+          <Box sx={{ p: 2, maxWidth: 300 }}>
+            <Typography variant="body1" sx={{ mb: 2 }}>
+              Are you sure you want to delete this question?
+            </Typography>
+            <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 1 }}>
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={handleCloseDeletePopover}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="contained"
+                size="small"
+                color="error"
+                onClick={handleConfirmDelete}
+              >
+                Delete
+              </Button>
+            </Box>
+          </Box>
+        </Popover>
 
         <MobileMenu />
 
