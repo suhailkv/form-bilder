@@ -35,7 +35,9 @@ import {
   CssBaseline,
   Chip,
 } from "@mui/material";
-
+import Alert from "@mui/material/Alert";
+import IconButton from "@mui/material/IconButton";
+import CloseIcon from "@mui/icons-material/Close";
 // NOTE: we no longer statically import UploadFileIcon to reduce initial bundle
 import {
   RadioButtonUnchecked,
@@ -50,6 +52,7 @@ import {
   requestOtp,
   verifyOtp,
   submitForm,
+  clearError,
 } from "../redux/features/formSlice";
 import { uploadBannerImage } from "../redux/features/formCreationSlice";
 import { evaluateConditions } from "../utils/formSchema";
@@ -798,6 +801,7 @@ export default function FormPreview({ previewData }) {
 
   const renderBanner = useCallback(() => {
     if (!bannerFile) return null;
+
     return (
       <Box
         sx={{
@@ -951,6 +955,43 @@ export default function FormPreview({ previewData }) {
           fontFamily: '"Inter", Roboto, Arial, sans-serif',
         }}
       >
+        {error && (
+          <Alert
+            severity="error"
+            onClose={() => dispatch(clearError())}
+            sx={{
+              position: "fixed",
+              top: { xs: 8, sm: 20 },
+              right: { xs: 8, sm: 20 },
+              width: { xs: 280, sm: 320 },
+              maxWidth: { xs: 280, sm: 350 },
+              backgroundColor: "#fff",
+              color: "#1a1a1a",
+              boxShadow: 3,
+              borderRadius: { xs: 1, sm: 2 },
+              zIndex: 1400,
+              borderLeft: { xs: "5px solid #b71c1c", sm: "8px solid #b71c1c" },
+              p: { xs: 1, sm: 2 },
+              fontSize: { xs: 13, sm: 15 },
+            }}
+            action={
+              <IconButton
+                aria-label="close"
+                color="inherit"
+                size="small"
+                onClick={() => dispatch(clearError())}
+              >
+                <CloseIcon />
+              </IconButton>
+            }
+          >
+            <strong style={{ fontSize: { xs: "0.9rem", sm: "1rem" } }}>
+              Error Occurred
+            </strong>
+            <br />
+            <span style={{ fontSize: "0.85rem" }}>{error}</span>
+          </Alert>
+        )}
         <Box sx={{ width: "100%", maxWidth: 760 }}>
           {/* Banner and Form Header */}
           {!openDialog ? (
@@ -1236,10 +1277,7 @@ export default function FormPreview({ previewData }) {
                       mt: 2,
                       mb: 1,
                       textAlign: "center",
-                      backgroundColor: "#fdecea",
-                      p: 1,
-                      borderRadius: 1,
-                      border: "1px solid #f5c2c7",
+                      fontWeight: 500,
                     }}
                   >
                     {error}
