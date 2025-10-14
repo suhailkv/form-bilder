@@ -48,14 +48,28 @@ export const verifyOtp = createAsyncThunk("form/verifyOtp", async ({ email, otp,
 });
 
 // 4️⃣ Submit form
-export const submitForm = createAsyncThunk("form/submitForm", async ({ formId, email, data }, { rejectWithValue }) => {
-  try {
-    const res = await axios.post(`${BACKEND_URL}/api/submissions/forms/${formId}/submit`, { email, data });
+// export const submitForm = createAsyncThunk("form/submitForm", async ({ formId, email, data }, { rejectWithValue }) => {
+//   try {
+//     const res = await axios.post(`${BACKEND_URL}/api/submissions/forms/${formId}/submit`, { email, data });
+//     return res.data;
+//   } catch (err) {
+//     return rejectWithValue(err.response?.data?.message || err.message);
+//   }
+// });
+
+
+export const submitForm = createAsyncThunk(
+  "form/submitForm",
+  async ({ formId, email, data, token }, { rejectWithValue }) => {
+    const res = await axios.post(
+      `${BACKEND_URL}/api/submissions/forms/${formId}/submit`,
+      { email, data },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
     return res.data;
-  } catch (err) {
-    return rejectWithValue(err.response?.data?.message || err.message);
   }
-});
+);
+
 
 const formSlice = createSlice({
   name: "form",

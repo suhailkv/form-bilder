@@ -45,6 +45,7 @@ import {
 import { uploadBannerImage } from "../redux/features/formCreationSlice";
 import { evaluateConditions } from "../utils/formSchema";
 import * as Yup from "yup";
+import Recaptcha from "../components/reCaptcha/Recaptcha";
 /* FormHeader will be lazy-loaded — removes it from initial bundle */
 const LazyFormHeader = React.lazy(() => import("./FormHeader"));
 
@@ -391,6 +392,16 @@ export default function FormPreview({ previewData }) {
   const dispatch = useDispatch();
   const { formId } = useParams();
 
+  ///token state
+  const [token , setToken] = useState("");
+  const [submitEnable , setSubmitEnable]  = useState(false);
+
+  useEffect(()=>{
+    if(token.length){
+      setSubmitEnable(true)
+    }
+  },[token])
+
   // Use shallowEqual to avoid unrelated updates causing re-renders
   const { formData, email, otpSent, otpVerified, error, loading, formLoading } = useSelector((s) => ({
     formData: s.form.formData,
@@ -493,7 +504,7 @@ export default function FormPreview({ previewData }) {
         return;
       }
       const data = { ...values, ...fileIdAndItsFilePath };
-      dispatch(submitForm({ formId, email, data }))
+      dispatch(submitForm({ formId, email, data  , token}))
         .unwrap()
         .then((res) => {
           if (res?.success) setOpenDialog(true);
@@ -611,7 +622,11 @@ export default function FormPreview({ previewData }) {
 
   // Always call the hook — conditionally prefetch the resource
   useIdlePrefetch(bannerFile ? `${BACKEND_URL}${FILE_PATH}${bannerFile}` : null);
-
+   
+  /// calll back for receiving the token 
+   const handleToken = useCallback((token) => {
+  setToken(token);
+}, []);
   const renderBanner = useCallback(() => {
     if (!bannerFile) return null;
     return (
@@ -777,9 +792,30 @@ function useIdlePrefetch(url) {
                     </Box>
                   );
                 })}
+                   
+                 {!schema?.emailVerification && (
+                      <Box mt={3}>
+                        <Recaptcha 
+                          sitekey={'6LdE3OkrAAAAAKa2WLVqOsj4UmfqQV6dysfuyKKt'} 
+                          callback={handleToken}
+                        />
+                      </Box>
+                  )}
 
                 <Box mt={3} display="flex" justifyContent="space-between" sx={{ flexDirection: { xs: "column", sm: "row" }, gap: { xs: 1.5, sm: 0 } }}>
-                  <Button type="submit" variant="contained" sx={{ backgroundColor: CONFIG.COLORS.PRIMARY, px: 3, width: { xs: "100%", sm: "auto" } }} disabled={Boolean(previewData) || (!previewData && schema.emailVerification && !otpVerified) || loading}>
+                  <Button type="submit" variant="contained" sx={{ backgroundColor: CONFIG.COLORS.PRIMARY, px: 3, width: { xs: "100%", sm: "auto" } }} 
+                  // disabled={Boolean(previewData) || (!previewData && schema.emailVerification && !otpVerified) || loading ||(!schema.emailVerification && !submitEnable) 
+                    disabled={
+                        Boolean(previewData) ||
+                        (!previewData &&
+                          (
+                            (schema.emailVerification && !otpVerified) ||  // waiting for email OTP
+                            (!schema.emailVerification && !submitEnable)   // waiting for reCAPTCHA
+                          )
+                        ) ||
+                        loading
+                      }
+                   >
                     {loading ? <><CircularProgress size={18} sx={{ color: "#fff" }} /> &nbsp;Submitting...</> : "Submit"}
                   </Button>
 
