@@ -6,13 +6,14 @@ export const fieldTypes = {
   radio: { label: "Radio Group" },
   multipleChoice: { label: "Multiple Choice" },
   uploadFile: { label: "Upload File" },
+ 
 };
 
 export const createNewField = (type, id) => {
   const baseField = {
     id: id || `field_${Date.now()}`,
     type,
-    label: `New ${fieldTypes[type]?.label || "Field"}`,
+    label: "" ,
     required: false,
     conditions: [],
   };
@@ -30,6 +31,7 @@ export const createNewField = (type, id) => {
       return { ...baseField, defaultChecked: false };
     case "uploadFile":
       return { ...baseField, accept: "", maxSize: "" }; // Optional: Add accept and maxSize
+     
     default:
       return baseField;
   }
@@ -131,3 +133,4 @@ export const evaluateConditions = (field, formData) => {
 export const getAvailableFieldsForConditions = (fields, currentFieldId) => {
   return fields.filter((field) => field.id !== currentFieldId);
 };
+
