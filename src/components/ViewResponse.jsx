@@ -22,8 +22,8 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchFormResponses, exportFormResponses } from "../redux/features/Adminformslice";
 import * as XLSX from "xlsx";
 import { jsPDF } from "jspdf";
-import { autoTable } from "jspdf-autotable";
-import { AUTH_TOKEN } from "../utils/const";
+import { autoTable } from "jspdf-autotable"; // Explicit import for plugin
+const AUTH_TOKEN = import.meta.env.VITE_AUTH_TOKEN;
 
 const ViewResponse = () => {
   const { id } = useParams();
