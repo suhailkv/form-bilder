@@ -14,8 +14,8 @@ export const fetchFormsList = createAsyncThunk(
   async ({ token, page = 1, limit = 10 }, { rejectWithValue }) => {
     try {
       const response = await axiosInstance.get("/forms", {
-        params: { token, page, limit },
-      });
+        params: { token, page, limit },withCredentials:true
+      },);
 
       console.log("API Response:", response.data);
 

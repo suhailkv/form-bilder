@@ -633,31 +633,31 @@ export default function FormPreview({ previewData }) {
     initialValues,
     validationSchema,
 
-    onSubmit: (values) => {
-      console.log("values", values);
-      console.log("file path and id", fileIdAndItsFilePath);
-      const data = { ...values, ...fileIdAndItsFilePath };
-      console.log("final", data);
+    // onSubmit: (values) => {
+    //   console.log("values", values);
+    //   console.log("file path and id", fileIdAndItsFilePath);
+    //   const data = { ...values, ...fileIdAndItsFilePath };
+    //   console.log("final", data);
 
-      // Prevent submission if OTP verification required but not verified
-      if (!previewData && schema.emailVerification && !otpVerified) {
-        alert("Please verify your email with OTP before submitting.");
-        return;
-      }
+    //   // Prevent submission if OTP verification required but not verified
+    //   if (!previewData && schema.emailVerification && !otpVerified) {
+    //     alert("Please verify your email with OTP before submitting.");
+    //     return;
+    //   }
 
-      dispatch(submitForm({ formId: formIdentifier, email, data }))
-        .then((response) => {
-          if (response.payload?.success) {
-            // Navigate to Thank You page after successful submission
-            navigate("/thanks");
-          } else {
-            console.error("Form submission failed:", response.payload);
-          }
-        })
-        .catch((error) => {
-          console.error("Error submitting form:", error);
-        });
-    },
+    //   dispatch(submitForm({ formId: formIdentifier, email, data }))
+    //     .then((response) => {
+    //       if (response.payload?.success) {
+    //         // Navigate to Thank You page after successful submission
+    //         navigate("/thanks");
+    //       } else {
+    //         console.error("Form submission failed:", response.payload);
+    //       }
+    //     })
+    //     .catch((error) => {
+    //       console.error("Error submitting form:", error);
+    //     });
+    // },
 
     onSubmit: (values) => {
       if (!previewData && schema?.emailVerification && !otpVerified) {
