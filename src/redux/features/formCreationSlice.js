@@ -1,6 +1,10 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
-import { AUTH_TOKEN, BACKEND_URL, FILE_PATH } from "../../utils/const";
+// import { AUTH_TOKEN, BACKEND_URL, FILE_PATH } from "../../utils/const";
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+const AUTH_TOKEN = import.meta.env.VITE_AUTH_TOKEN;
+const FILE_PATH = import.meta.env.VITE_FILE_PATH;
+
 
 // Dynamic token getter
 const getToken = () => localStorage.getItem("authToken") || AUTH_TOKEN;
