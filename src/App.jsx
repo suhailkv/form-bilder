@@ -8,6 +8,7 @@ import FormPreview from "./components/FormPreview";
 import store from "./redux/store";
 import { Provider as ReduxProvider } from "react-redux";
 import QuestionBuilder from "./pages/QuestionBuilder";
+import FormThanks from "./components/formThanks";
 import AdminDashboard from './components/AdminDashboard';
 import ViewResponse from './components/ViewResponse';
 import LandingPage from "./pages/Landingpage";
@@ -24,6 +25,7 @@ const App = () => (
             <Route path="/" element={<LandingPage />} />
             <Route path="/ind" element={<Index />} />
             <Route path="/form/:formId" element={<FormPreview />} />
+            <Route path="/thanks" element={<FormThanks />}  />
             <Route path="/questions" element={<QuestionBuilder />} />
             <Route path="/questions/:formId" element={<QuestionBuilder />} />
             <Route path="*" element={<NotFound />} />

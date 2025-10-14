@@ -22,7 +22,7 @@ export const fetchForm = createAsyncThunk("form/fetchForm", async (formId, { rej
     return rejectWithValue(err.response?.data?.message || err.message);
   }
 });
-
+console.log("fetchForm",fetchForm)
 // 2️⃣ Request OTP
 export const requestOtp = createAsyncThunk("form/requestOtp", async ({ formId, email }, { rejectWithValue }) => {
   try {
@@ -73,6 +73,9 @@ const formSlice = createSlice({
     },
     setOtpVerified: (state, action) => {
       state.otpVerified = action.payload;
+    },
+    clearError: (state) => {
+      state.error = null;
     },
   },
   extraReducers: (builder) => {
@@ -132,8 +135,10 @@ const formSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       });
+
   },
 });
 
-export const { setFormData, setEmail, resetOtp, setOtpVerified } = formSlice.actions;
+
+export const { setFormData, setEmail, resetOtp, setOtpVerified, clearError } = formSlice.actions;
 export default formSlice.reducer;
