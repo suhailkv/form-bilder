@@ -709,7 +709,7 @@ export default function LandingPage() {
             position: "fixed",
             bottom: 30,
             right: 30,
-            bgcolor: "#1a237e",
+            bgcolor: "#1487CE",
             "&:hover": { bgcolor: "#0d175e" },
             boxShadow: "0 5px 15px rgba(0,0,0,0.3)",
           }}
