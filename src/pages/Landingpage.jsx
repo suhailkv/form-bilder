@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState,useRef } from "react";
 import { Box, Typography, Paper, IconButton, Tooltip, Fab, AppBar, Toolbar, CircularProgress, Button, Snackbar, Alert, Popover } from "@mui/material";
 import { Assignment, Today, Add, Visibility, Edit, Delete } from "@mui/icons-material";
 import { DataGrid } from "@mui/x-data-grid";
@@ -7,8 +7,8 @@ import { fetchFormsList, softDeleteForm } from "../redux/features/Adminformslice
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Icon } from "@iconify/react";
-import Cookies from "js-cookie";
 // const AUTH_TOKEN = import.meta.env.VITE_AUTH_TOKEN;
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "";
 
 export default function LandingPage() {
   const params = new URLSearchParams(window.location.search);
@@ -25,14 +25,47 @@ export default function LandingPage() {
   const [logoInterval] = useState("https://www.intervaledu.com/static/web/images/logo/logo-dark.png");
   const [logoMap] = useState("https://protest.teaminterval.net/static/media/map.7dd1ec7c87cddefd09e4.gif");
 
+    const hasFetched = useRef(false);
+
   useEffect(() => {
-    if (tokenParam) {
-      Cookies.remove("session");
-      Cookies.remove("refreshToken");
-      dispatch(fetchFormsList({ token: tokenParam, page, limit: pageSize }));
-    }
-    dispatch(fetchFormsList({ token: tokenParam, page, limit: pageSize }));
-  }, [dispatch, page, pageSize]);
+    if (hasFetched.current) return;
+    hasFetched.current = true;
+
+    const handleLogoutAndFetch = async () => {
+      if (tokenParam) {
+        try {
+          const res = await fetch(`${BACKEND_URL}/api/auth/logout`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          });
+
+          const data = await res.json();
+
+          if (data.status) {
+            // Fetch forms list once logout is successful
+            dispatch(fetchFormsList({ token: tokenParam, page, limit: pageSize }));
+
+            // Clean the URL (without triggering another render loop)
+            setTimeout(() => {
+              navigate(window.location.pathname, { replace: true });
+            }, 0);
+          } else {
+            alert("Logout failed: " + (data.message || "Unknown error"));
+          }
+        } catch (error) {
+          console.error("Logout API error:", error);
+          alert("Error during logout. Please try again.");
+        }
+      } else {
+        dispatch(fetchFormsList({ token: tokenParam, page, limit: pageSize }));
+      }
+    };
+
+    handleLogoutAndFetch();
+  }, [dispatch, tokenParam, page, pageSize, navigate]); // ✅ Removed 'location'
+
 
   const totalForms = pagination.total || 0;
   const today = new Date().toDateString();
