@@ -13,41 +13,42 @@ import {
   Menu,
   MenuItem,
   Grid,
-  Alert,
-  Chip,
 } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
-import { Visibility as VisibilityIcon, Assignment, FileDownload } from "@mui/icons-material";
+import { Visibility as VisibilityIcon, FileDownload } from "@mui/icons-material";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchFormResponses, exportFormResponses } from "../redux/features/Adminformslice";
 import * as XLSX from "xlsx";
 import { jsPDF } from "jspdf";
-import { autoTable } from "jspdf-autotable"; // Explicit import for plugin
+import autoTable from "jspdf-autotable";
+import { format } from "date-fns";
+
 const AUTH_TOKEN = import.meta.env.VITE_AUTH_TOKEN;
 
 const ViewResponse = () => {
   const { id } = useParams();
   const dispatch = useDispatch();
-  const { formResponses, currentSchema, loading, exportLoading, error } =
-    useSelector((state) => state.adminForm);
+  const { formResponses, currentSchema, loading, pagination } = useSelector(
+    (state) => state.adminForm
+  );
 
   const [selectedResponse, setSelectedResponse] = useState(null);
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   const handleMenuClick = (e) => setAnchorEl(e.currentTarget);
   const handleMenuClose = () => setAnchorEl(null);
 
   useEffect(() => {
     if (id && AUTH_TOKEN) {
-      dispatch(fetchFormResponses({ formId: id, token: AUTH_TOKEN }))
+      dispatch(fetchFormResponses({ formId: id, token: AUTH_TOKEN, page, limit: pageSize }))
         .unwrap()
-        .then((res) => console.log("API Success:", res))
         .catch((err) => console.error("API Error:", err));
     }
-  }, [dispatch, id]);
+  }, [dispatch, id, page, pageSize]);
 
-  // Flatten data for exports
   const flattenExportData = (data) => {
     if (!Array.isArray(data) || data.length === 0) return [];
     return data.map((responseItem, index) => {
@@ -57,7 +58,7 @@ const ViewResponse = () => {
         fields.forEach((field) => {
           let value = field.value;
           if (Array.isArray(value)) value = value.join(", ");
-          if (field.type === "checkbox") value = value ? "Yes" : "No"; // ✅ Convert checkbox to Yes/No
+          if (field.type === "checkbox") value = value ? "Yes" : "No";
           flatRow[field.label || "Unknown"] = value || "";
         });
       }
@@ -66,62 +67,47 @@ const ViewResponse = () => {
   };
 
   const exportToCSV = (data) => {
-    try {
-      const flatData = flattenExportData(data);
-      if (!flatData.length) return alert("No data available to export");
-      const headers = Object.keys(flatData[0]);
-      const csvContent = [
-        headers.join(","),
-        ...flatData.map((row) =>
-          headers.map((h) => `"${String(row[h]).replace(/"/g, '""')}"`).join(",")
-        ),
-      ].join("\n");
-      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = `form_${id}_responses.csv`;
-      link.click();
-      handleMenuClose();
-    } catch (err) {
-      console.error(err);
-      alert("Failed to export CSV");
-    }
+    const flatData = flattenExportData(data);
+    if (!flatData.length) return alert("No data available to export");
+    const headers = Object.keys(flatData[0]);
+    const csvContent = [
+      headers.join(","),
+      ...flatData.map((row) =>
+        headers.map((h) => `"${String(row[h]).replace(/"/g, '""')}"`).join(",")
+      ),
+    ].join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `form_${id}_responses.csv`;
+    link.click();
+    handleMenuClose();
   };
 
   const exportToExcel = (data) => {
-    try {
-      const flatData = flattenExportData(data);
-      if (!flatData.length) return alert("No data available to export");
-      const ws = XLSX.utils.json_to_sheet(flatData);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Responses");
-      XLSX.writeFile(wb, `form_${id}_responses.xlsx`);
-      handleMenuClose();
-    } catch (err) {
-      console.error(err);
-      alert("Failed to export Excel");
-    }
+    const flatData = flattenExportData(data);
+    if (!flatData.length) return alert("No data available to export");
+    const ws = XLSX.utils.json_to_sheet(flatData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Responses");
+    XLSX.writeFile(wb, `form_${id}_responses.xlsx`);
+    handleMenuClose();
   };
 
   const exportToPDF = (data) => {
-    try {
-      const flatData = flattenExportData(data);
-      if (!flatData.length) return alert("No data available to export");
-      const doc = new jsPDF({ orientation: "landscape" });
-      doc.setFontSize(16);
-      doc.text(`Form ${id} - Responses`, 14, 15);
-      doc.setFontSize(10);
-      doc.text(`Total Responses: ${flatData.length}`, 14, 22);
-      doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 27);
-      const headers = Object.keys(flatData[0]);
-      const rows = flatData.map((row) => headers.map((h) => row[h] || ""));
-      autoTable(doc, { head: [headers], body: rows, startY: 32, styles: { fontSize: 7 } });
-      doc.save(`form_${id}_responses.pdf`);
-      handleMenuClose();
-    } catch (err) {
-      console.error(err);
-      alert("Failed to export PDF");
-    }
+    const flatData = flattenExportData(data);
+    if (!flatData.length) return alert("No data available to export");
+    const doc = new jsPDF({ orientation: "landscape" });
+    doc.setFontSize(16);
+    doc.text(`Form ${id} - Responses`, 14, 15);
+    doc.setFontSize(10);
+    doc.text(`Total Responses: ${flatData.length}`, 14, 22);
+    doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 27);
+    const headers = Object.keys(flatData[0]);
+    const rows = flatData.map((row) => headers.map((h) => row[h] || ""));
+    autoTable(doc, { head: [headers], body: rows, startY: 32, styles: { fontSize: 7 } });
+    doc.save(`form_${id}_responses.pdf`);
+    handleMenuClose();
   };
 
   const handleExport = (type) => {
@@ -145,9 +131,9 @@ const ViewResponse = () => {
     {
       field: "email",
       headerName: "Email",
-      width: 200,
+      width: 220,
       renderCell: (params) => (
-        <Tooltip title={params.value ? `Email ID: ${params.value}` : "Email not available"}>
+        <Tooltip title={params.value || "Email not available"}>
           <Typography variant="body2" sx={{ color: params.value ? "inherit" : "gray" }}>
             {params.value || "N/A"}
           </Typography>
@@ -156,17 +142,24 @@ const ViewResponse = () => {
     },
     { field: "userIP", headerName: "IP Address", width: 150 },
     {
-      field: "isVerified",
-      headerName: "Verified",
-      width: 120,
-      renderCell: (params) => <Chip label={params.value ? "Verified" : "Not Verified"} color={params.value ? "success" : "error"} size="small" />,
+      field: "createdAt",
+      headerName: "Created At",
+      width: 280,
+      renderCell: (params) => {
+        if (!params.value) return "N/A";
+        try {
+          const date = new Date(params.value);
+          return <Typography variant="body2">{format(date, "EEEE MMMM yyyy, hh:mm a")}</Typography>;
+        } catch {
+          return "Invalid Date";
+        }
+      },
     },
-    { field: "createdAt", headerName: "Created At", width: 180 },
-    { field: "userAgent", headerName: "User Agent", width: 200 },
+    { field: "userAgent", headerName: "User Agent", width: 250 },
     {
       field: "view",
-      headerName: "View Details",
-      width: 130,
+      headerName: "View",
+      width: 110,
       renderCell: (params) => (
         <IconButton onClick={() => setSelectedResponse(params.row)} color="primary">
           <VisibilityIcon />
@@ -197,31 +190,48 @@ const ViewResponse = () => {
       </Paper>
 
       {loading ? (
-        <CircularProgress />
+        <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
+          <CircularProgress />
+        </Box>
       ) : rows.length === 0 ? (
-        <Typography>No responses found</Typography>
+        <Typography align="center" sx={{ mt: 4 }}>No responses found</Typography>
       ) : (
-        <DataGrid
-          rows={rows}
-          columns={columns}
-          getRowId={(row) => row.sl_no}
-          autoHeight
-          initialState={{
-            pagination: { paginationModel: { pageSize: 10 } },
-          }}
-          pageSizeOptions={[5, 10, 20]}
-          sx={{
-            "& .MuiDataGrid-cell": {
-              display: "flex",
-              alignItems: "center",
-            },
-          }}
-        />
+        <div style={{ height: 600, width: "100%" }}>
+          <DataGrid
+            rows={rows}
+            columns={columns}
+            getRowId={(row) => row.sl_no}
+            pagination
+            paginationMode="server"
+            rowCount={pagination?.total || rows.length}
+            pageSizeOptions={[5, 10, 20]}
+            paginationModel={{ page: page - 1, pageSize }}
+            onPaginationModelChange={(model) => {
+              setPage(model.page + 1);
+              setPageSize(model.pageSize);
+            }}
+            loading={loading}
+            autoHeight
+            sx={{ "& .MuiDataGrid-cell": { display: "flex", alignItems: "center" } }}
+          />
+        </div>
       )}
 
-      {/* Modal */}
+      {/* MODAL */}
       <Modal open={!!selectedResponse} onClose={() => setSelectedResponse(null)}>
-        <Box sx={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", bgcolor: "white", p: 3, borderRadius: 2, maxHeight: "80vh", overflowY: "auto" }}>
+        <Box
+          sx={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            bgcolor: "white",
+            p: 3,
+            borderRadius: 2,
+            maxHeight: "80vh",
+            overflowY: "auto",
+          }}
+        >
           <Typography variant="h6" gutterBottom>Response Details</Typography>
           <Divider sx={{ mb: 2 }} />
           {selectedResponse?.fields?.map((field, idx) => (
@@ -232,14 +242,14 @@ const ViewResponse = () => {
               ) : field.type === "uploadFile" ? (
                 <a href={field.value} target="_blank" rel="noopener noreferrer">{field.value}</a>
               ) : field.type === "checkbox" ? (
-                <Typography>{field.value ? "Yes" : "No"}</Typography> // ✅ Checkbox shows Yes/No
+                <Typography>{field.value ? "Yes" : "No"}</Typography>
               ) : (
                 <Typography>{field.value || "N/A"}</Typography>
               )}
               <Divider sx={{ mt: 1 }} />
             </Box>
           ))}
-          <Button onClick={() => setSelectedResponse(null)}>Close</Button>
+          <Button onClick={() => setSelectedResponse(null)} variant="contained" sx={{ mt: 1 }}>Close</Button>
         </Box>
       </Modal>
     </Box>
