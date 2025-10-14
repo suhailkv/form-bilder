@@ -1,50 +1,40 @@
 import React, { useEffect, useState } from "react";
-import {
-  Box,
-  Typography,
-  Paper,
-  IconButton,
-  Tooltip,
-  Fab,
-  AppBar,
-  Toolbar,
-  CircularProgress,
-  Button,
-  Snackbar,
-  Alert,
-} from "@mui/material";
+import { Box, Typography, Paper, IconButton, Tooltip, Fab, AppBar, Toolbar, CircularProgress, Button, Snackbar, Alert } from "@mui/material";
 import { Assignment, Today, Add, Visibility, Edit, Delete } from "@mui/icons-material";
 import { DataGrid } from "@mui/x-data-grid";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchFormsList, softDeleteForm } from "../redux/features/Adminformslice";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Icon } from '@iconify/react';
-const AUTH_TOKEN = import.meta.env.VITE_AUTH_TOKEN;
-
+import { Icon } from "@iconify/react";
+import Cookies from "js-cookie";
+// const AUTH_TOKEN = import.meta.env.VITE_AUTH_TOKEN;
 
 export default function LandingPage() {
+  const params = new URLSearchParams(window.location.search);
+  const tokenParam = params.get("token");
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { forms, loading, error, pagination } = useSelector((state) => state.adminForm);
 
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  
 
   const [logoInterval] = useState("https://www.intervaledu.com/static/web/images/logo/logo-dark.png");
   const [logoMap] = useState("https://protest.teaminterval.net/static/media/map.7dd1ec7c87cddefd09e4.gif");
 
   useEffect(() => {
-    if (AUTH_TOKEN) {
-      dispatch(fetchFormsList({ token: AUTH_TOKEN, page, limit: pageSize }));
+    if (tokenParam) {
+      Cookies.remove("session");
+      Cookies.remove("refreshToken");
+      dispatch(fetchFormsList({ token: tokenParam, page, limit: pageSize }));
     }
+    dispatch(fetchFormsList({ token: tokenParam, page, limit: pageSize }));
   }, [dispatch, page, pageSize]);
 
   const totalForms = pagination.total || 0;
   const today = new Date().toDateString();
-  const todayForms =
-    forms?.filter((f) => new Date(f.createdAt).toDateString() === today).length || 0;
+  const todayForms = forms?.filter((f) => new Date(f.createdAt).toDateString() === today).length || 0;
 
   const handleDelete = (id) => {
     if (window.confirm("Are you sure you want to delete this form?")) {
@@ -64,11 +54,7 @@ export default function LandingPage() {
       width: 130,
       renderCell: (params) => {
         const isPub = params.value === 1 || params.value === true;
-        return (
-          <span style={{ color: isPub ? "green" : "red", fontWeight: 600 }}>
-            {isPub ? "Yes" : "No"}
-          </span>
-        );
+        return <span style={{ color: isPub ? "green" : "red", fontWeight: 600 }}>{isPub ? "Yes" : "No"}</span>;
       },
     },
     {
@@ -85,13 +71,9 @@ export default function LandingPage() {
         return (
           <Tooltip title={isPub ? "View Responses" : "Form not published"}>
             {/* <span style={{ filter: isPub ? "none" : "blur(2px)" }}> */}
-              <IconButton
-                onClick={() => isPub && navigate(`/viewResponse/${params.row.id}`)}
-                sx={{ color: "#1a237e" }}
-                 disabled={!isPub}
-              >
-                <Visibility />
-              </IconButton>
+            <IconButton onClick={() => isPub && navigate(`/viewResponse/${params.row.id}`)} sx={{ color: "#1a237e" }} disabled={!isPub}>
+              <Visibility />
+            </IconButton>
             {/* </span> */}
           </Tooltip>
         );
@@ -121,63 +103,53 @@ export default function LandingPage() {
         </Tooltip>
       ),
     },
-  {
-  field: "action",
-  headerName: "Copy Link",
-  width: 150,
-  renderCell: (params) => {
-    const [open, setOpen] = useState(false);
-    const [message, setMessage] = useState("");
-    const [severity, setSeverity] = useState("success");
+    {
+      field: "action",
+      headerName: "Copy Link",
+      width: 150,
+      renderCell: (params) => {
+        const [open, setOpen] = useState(false);
+        const [message, setMessage] = useState("");
+        const [severity, setSeverity] = useState("success");
 
-    const handleCopy = () => {
-      const fullUrl = `${window.location.origin}/form/${params.row.formToken}`;
-      navigator.clipboard
-        .writeText(fullUrl)
-        .then(() => {
-          setMessage("✅ Link copied to clipboard!");
-          setSeverity("success");
-          setOpen(true);
-        })
-        .catch(() => {
-          setMessage("❌ Failed to copy link!");
-          setSeverity("error");
-          setOpen(true);
-        });
-    };
+        const handleCopy = () => {
+          const fullUrl = `${window.location.origin}/form/${params.row.formToken}`;
+          navigator.clipboard
+            .writeText(fullUrl)
+            .then(() => {
+              setMessage("✅ Link copied to clipboard!");
+              setSeverity("success");
+              setOpen(true);
+            })
+            .catch(() => {
+              setMessage("❌ Failed to copy link!");
+              setSeverity("error");
+              setOpen(true);
+            });
+        };
 
-    return (
-      <>
-        <Button
-          onClick={handleCopy}
-          disabled={!params.row.isPublished}
-          variant="contained"
-          size="small"
-          startIcon={<Icon icon="icon-park-outline:link" width="20" height="20" />}
-        >
-          Copy
-        </Button>
+        return (
+          <>
+            <Button
+              onClick={handleCopy}
+              disabled={!params.row.isPublished}
+              variant="contained"
+              size="small"
+              startIcon={<Icon icon="icon-park-outline:link" width="20" height="20" />}
+            >
+              Copy
+            </Button>
 
-        {/* MUI Snackbar Alert */}
-        <Snackbar
-          open={open}
-          autoHideDuration={2000}
-          onClose={() => setOpen(false)}
-          anchorOrigin={{ vertical: "top", horizontal: "center" }}
-        >
-          <Alert
-            onClose={() => setOpen(false)}
-            severity={severity}
-            variant="filled"
-            sx={{ width: "100%" }}
-          >
-            {message}
-          </Alert>
-        </Snackbar>
-      </>
-    );
-  },
-}
+            {/* MUI Snackbar Alert */}
+            <Snackbar open={open} autoHideDuration={2000} onClose={() => setOpen(false)} anchorOrigin={{ vertical: "top", horizontal: "center" }}>
+              <Alert onClose={() => setOpen(false)} severity={severity} variant="filled" sx={{ width: "100%" }}>
+                {message}
+              </Alert>
+            </Snackbar>
+          </>
+        );
+      },
+    },
   ];
 
   return (
@@ -327,15 +299,6 @@ export default function LandingPage() {
   );
 }
 
-
-
-
-
-
-
-
-
-
 // import React, { useEffect, useState } from "react";
 // import {
 //   Box,
@@ -409,10 +372,10 @@ export default function LandingPage() {
 //     if (!formToDelete) return;
 
 //     setDeleting(true);
-    
+
 //     try {
 //       await dispatch(softDeleteForm({ id: formToDelete.id, token: AUTH_TOKEN })).unwrap();
-      
+
 //       setSnackbar({
 //         open: true,
 //         message: `✅ Form "${formToDelete.title}" has been soft deleted successfully!`,
@@ -421,7 +384,7 @@ export default function LandingPage() {
 
 //       // Refresh the forms list
 //       dispatch(fetchFormsList({ token: AUTH_TOKEN, page, limit: pageSize }));
-      
+
 //     } catch (err) {
 //       setSnackbar({
 //         open: true,
@@ -436,9 +399,9 @@ export default function LandingPage() {
 //   };
 
 //   const columns = [
-//     { 
-//       field: "id", 
-//       headerName: "Form ID", 
+//     {
+//       field: "id",
+//       headerName: "Form ID",
 //       width: 100,
 //       renderCell: (params) => (
 //         <Typography variant="body2" fontWeight={600}>
@@ -446,18 +409,18 @@ export default function LandingPage() {
 //         </Typography>
 //       )
 //     },
-//     { 
-//       field: "title", 
-//       headerName: "Form Title", 
+//     {
+//       field: "title",
+//       headerName: "Form Title",
 //       width: 220,
 //       renderCell: (params) => (
 //         <Tooltip title={params.value}>
-//           <Typography 
-//             variant="body2" 
-//             sx={{ 
-//               overflow: "hidden", 
+//           <Typography
+//             variant="body2"
+//             sx={{
+//               overflow: "hidden",
 //               textOverflow: "ellipsis",
-//               whiteSpace: "nowrap" 
+//               whiteSpace: "nowrap"
 //             }}
 //           >
 //             {params.value}
@@ -465,16 +428,16 @@ export default function LandingPage() {
 //         </Tooltip>
 //       )
 //     },
-//     { 
-//       field: "description", 
-//       headerName: "Description", 
+//     {
+//       field: "description",
+//       headerName: "Description",
 //       width: 250,
 //       renderCell: (params) => (
 //         <Tooltip title={params.value || "No description"}>
-//           <Typography 
-//             variant="body2" 
-//             sx={{ 
-//               overflow: "hidden", 
+//           <Typography
+//             variant="body2"
+//             sx={{
+//               overflow: "hidden",
 //               textOverflow: "ellipsis",
 //               whiteSpace: "nowrap",
 //               color: params.value ? "inherit" : "gray"
@@ -532,7 +495,7 @@ export default function LandingPage() {
 //                 onClick={() => isPub && navigate(`/viewResponse/${params.row.id}`)}
 //                 disabled={!isPub}
 //                 size="small"
-//                 sx={{ 
+//                 sx={{
 //                   color: isPub ? "#1a237e" : "#bdbdbd",
 //                   "&:hover": {
 //                     bgcolor: isPub ? "rgba(26, 35, 126, 0.08)" : "transparent"
@@ -552,10 +515,10 @@ export default function LandingPage() {
 //       width: 80,
 //       renderCell: (params) => (
 //         <Tooltip title="Edit Form">
-//           <IconButton 
-//             onClick={() => navigate(`/questions/${params.row.id}`)} 
+//           <IconButton
+//             onClick={() => navigate(`/questions/${params.row.id}`)}
 //             size="small"
-//             sx={{ 
+//             sx={{
 //               color: "#00796b",
 //               "&:hover": { bgcolor: "rgba(0, 121, 107, 0.08)" }
 //             }}
@@ -571,10 +534,10 @@ export default function LandingPage() {
 //       width: 80,
 //       renderCell: (params) => (
 //         <Tooltip title="Soft Delete Form">
-//           <IconButton 
+//           <IconButton
 //             onClick={() => handleDeleteClick(params.row)}
 //             size="small"
-//             sx={{ 
+//             sx={{
 //               color: "#d32f2f",
 //               "&:hover": { bgcolor: "rgba(211, 47, 47, 0.08)" }
 //             }}
@@ -615,7 +578,7 @@ export default function LandingPage() {
 //               variant="outlined"
 //               size="small"
 //               startIcon={<Icon icon="icon-park-outline:link" width="18" height="18" />}
-//               sx={{ 
+//               sx={{
 //                 textTransform: "none",
 //                 fontSize: "0.75rem",
 //                 py: 0.5
@@ -809,11 +772,11 @@ export default function LandingPage() {
 //           }
 //         }}
 //       >
-//         <DialogTitle 
-//           id="delete-dialog-title" 
-//           sx={{ 
-//             display: "flex", 
-//             alignItems: "center", 
+//         <DialogTitle
+//           id="delete-dialog-title"
+//           sx={{
+//             display: "flex",
+//             alignItems: "center",
 //             gap: 1.5,
 //             pb: 1,
 //             borderBottom: "1px solid #f0f0f0"
@@ -829,7 +792,7 @@ export default function LandingPage() {
 //             </Typography>
 //           </Box>
 //         </DialogTitle>
-        
+
 //         <DialogContent sx={{ mt: 2 }}>
 //           <DialogContentText>
 //             Are you sure you want to soft delete the form:
@@ -849,10 +812,10 @@ export default function LandingPage() {
 //               "{formToDelete?.title}"
 //             </Box>
 //             <br />
-//             <Box sx={{ 
-//               bgcolor: "#fff3e0", 
-//               p: 1.5, 
-//               borderRadius: 1, 
+//             <Box sx={{
+//               bgcolor: "#fff3e0",
+//               p: 1.5,
+//               borderRadius: 1,
 //               borderLeft: "4px solid #ff9800",
 //               mt: 2
 //             }}>
@@ -863,13 +826,13 @@ export default function LandingPage() {
 //             </Box>
 //           </DialogContentText>
 //         </DialogContent>
-        
+
 //         <DialogActions sx={{ p: 2.5, pt: 1, gap: 1 }}>
-//           <Button 
-//             onClick={handleDeleteCancel} 
+//           <Button
+//             onClick={handleDeleteCancel}
 //             variant="outlined"
 //             disabled={deleting}
-//             sx={{ 
+//             sx={{
 //               textTransform: "none",
 //               color: "#666",
 //               borderColor: "#ddd",
@@ -882,13 +845,13 @@ export default function LandingPage() {
 //           >
 //             Cancel
 //           </Button>
-//           <Button 
-//             onClick={handleDeleteConfirm} 
+//           <Button
+//             onClick={handleDeleteConfirm}
 //             variant="contained"
 //             color="error"
 //             disabled={deleting}
 //             startIcon={deleting ? <CircularProgress size={16} color="inherit" /> : <DeleteOutline />}
-//             sx={{ 
+//             sx={{
 //               textTransform: "none",
 //               fontWeight: 600,
 //               px: 3,
@@ -914,7 +877,7 @@ export default function LandingPage() {
 //           onClose={() => setSnackbar({ ...snackbar, open: false })}
 //           severity={snackbar.severity}
 //           variant="filled"
-//           sx={{ 
+//           sx={{
 //             width: "100%",
 //             boxShadow: "0 4px 12px rgba(0,0,0,0.15)"
 //           }}

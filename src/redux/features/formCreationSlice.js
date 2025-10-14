@@ -5,192 +5,142 @@ const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 const AUTH_TOKEN = import.meta.env.VITE_AUTH_TOKEN;
 const FILE_PATH = import.meta.env.VITE_FILE_PATH;
 
-
 // Dynamic token getter
 const getToken = () => localStorage.getItem("authToken") || AUTH_TOKEN;
 /* --------------------------------------------
    1. FETCH FORM BY ID
 --------------------------------------------- */
-export const fetchForm = createAsyncThunk(
-  "formCreation/fetchForm",
-  async (formId, { rejectWithValue }) => {
-    try {
-      const response = await axios.get(
-        `${BACKEND_URL}/api/forms/${formId}?token=${getToken()}`
-      );
-      return response.data.data;
-    } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.message || error.message || "Form not found"
-      );
-    }
+export const fetchForm = createAsyncThunk("formCreation/fetchForm", async (formId, { rejectWithValue }) => {
+  try {
+    const response = await axios.get(`${BACKEND_URL}/api/forms/${formId}?token=${getToken()}`, { withCredentials: true });
+    return response.data.data;
+  } catch (error) {
+    return rejectWithValue(error.response?.data?.message || error.message || "Form not found");
   }
-);
+});
 
 /* --------------------------------------------
    2. CREATE NEW FORM (Fixed to send filename only)
 --------------------------------------------- */
-export const createForm = createAsyncThunk(
-  "formCreation/createForm",
-  async (payload, { rejectWithValue }) => {
-    try {
-      // Clean payload: Remove base64 data, keep only filename reference
-      const cleanPayload = {
-        ...payload,
-        bannerImage: payload.bannerImageFilename || null, // Send only filename
-      };
+export const createForm = createAsyncThunk("formCreation/createForm", async (payload, { rejectWithValue }) => {
+  try {
+    // Clean payload: Remove base64 data, keep only filename reference
+    const cleanPayload = {
+      ...payload,
+      bannerImage: payload.bannerImageFilename || null, // Send only filename
+    };
 
-      // Remove temporary fields
-      delete cleanPayload.bannerImageFilename;
+    // Remove temporary fields
+    delete cleanPayload.bannerImageFilename;
 
-      console.log("Creating form with payload:", cleanPayload);
-      const response = await axios.post(
-        `${BACKEND_URL}/api/forms?token=${getToken()}`,
-        cleanPayload
-      );
-      return response.data.data;
-    } catch (error) {
-      console.error("Create form error:", error.response?.data || error);
-      return rejectWithValue(
-        error.response?.data?.message ||
-          error.message ||
-          "Failed to create form"
-      );
-    }
+    console.log("Creating form with payload:", cleanPayload);
+    const response = await axios.post(`${BACKEND_URL}/api/forms?token=${getToken()}`, cleanPayload, { withCredentials: true });
+    return response.data.data;
+  } catch (error) {
+    console.error("Create form error:", error.response?.data || error);
+    return rejectWithValue(error.response?.data?.message || error.message || "Failed to create form");
   }
-);
+});
 
 /* --------------------------------------------
    3. UPDATE FORM (Fixed to send filename only)
 --------------------------------------------- */
-export const updateForm = createAsyncThunk(
-  "formCreation/updateForm",
-  async ({ formId, payload }, { rejectWithValue }) => {
-    try {
-      // Clean payload: Remove base64 data, keep only filename reference
-      const cleanPayload = {
-        ...payload,
-        bannerImage: payload.bannerImageFilename || null,
-      };
+export const updateForm = createAsyncThunk("formCreation/updateForm", async ({ formId, payload }, { rejectWithValue }) => {
+  try {
+    // Clean payload: Remove base64 data, keep only filename reference
+    const cleanPayload = {
+      ...payload,
+      bannerImage: payload.bannerImageFilename || null,
+    };
 
-      delete cleanPayload.bannerImageFilename;
+    delete cleanPayload.bannerImageFilename;
 
-      console.log("Updating form with payload:", cleanPayload);
-      const response = await axios.put(
-        `${BACKEND_URL}/api/forms/${formId}?token=${getToken()}`,
-        cleanPayload
-      );
-      return response.data.data;
-    } catch (error) {
-      console.error("Update form error:", error.response?.data || error);
-      return rejectWithValue(
-        error.response?.data?.message ||
-          error.message ||
-          "Failed to update form"
-      );
-    }
+    console.log("Updating form with payload:", cleanPayload);
+    const response = await axios.put(`${BACKEND_URL}/api/forms/${formId}?token=${getToken()}`, cleanPayload, { withCredentials: true });
+    return response.data.data;
+  } catch (error) {
+    console.error("Update form error:", error.response?.data || error);
+    return rejectWithValue(error.response?.data?.message || error.message || "Failed to update form");
   }
-);
+});
 
 /* --------------------------------------------
    4. UPLOAD BANNER IMAGE (Fixed response handling)
 --------------------------------------------- */
-export const uploadBannerImage = createAsyncThunk(
-  "formCreation/uploadBannerImage",
-  async (file, { rejectWithValue }) => {
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
+export const uploadBannerImage = createAsyncThunk("formCreation/uploadBannerImage", async (file, { rejectWithValue }) => {
+  try {
+    const formData = new FormData();
+    formData.append("file", file);
 
-      const response = await axios.post(`${BACKEND_URL}/api/upload`, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+    const response = await axios.post(`${BACKEND_URL}/api/upload`, formData, {
+      headers: { "Content-Type": "multipart/form-data", withCredentials: true },
+    });
 
-      console.log("Upload response:", response.data);
+    console.log("Upload response:", response.data);
 
-      // Handle multiple response formats from backend
-      let storedName = null;
+    // Handle multiple response formats from backend
+    let storedName = null;
 
-      // Format 1: { success: true, files: [{ storedName: "..." }] }
-      if (response.data?.files?.length > 0) {
-        storedName = response.data.files[0].storedName;
-      }
-      // Format 2: { success: true, fileName: "uploads/..." }
-      else if (response.data?.fileName) {
-        storedName = response.data.fileName.replace("uploads/", "");
-      }
-      // Format 3: { success: true, file: { filename: "..." } }
-      else if (response.data?.file?.filename) {
-        storedName = response.data.file.filename;
-      }
-
-      if (response.data.success && storedName) {
-        // Create preview URL for display
-        const imageUrl = `${BACKEND_URL}${FILE_PATH}${storedName}`;
-
-        return {
-          success: true,
-          storedName,
-          imagePreviewUrl: imageUrl, // URL for display only
-        };
-      } else {
-        return rejectWithValue(
-          "Upload failed: No file information returned from server"
-        );
-      }
-    } catch (error) {
-      console.error("Upload error:", error);
-      return rejectWithValue(
-        error.response?.data?.message || error.message || "Image upload failed"
-      );
+    // Format 1: { success: true, files: [{ storedName: "..." }] }
+    if (response.data?.files?.length > 0) {
+      storedName = response.data.files[0].storedName;
     }
+    // Format 2: { success: true, fileName: "uploads/..." }
+    else if (response.data?.fileName) {
+      storedName = response.data.fileName.replace("uploads/", "");
+    }
+    // Format 3: { success: true, file: { filename: "..." } }
+    else if (response.data?.file?.filename) {
+      storedName = response.data.file.filename;
+    }
+
+    if (response.data.success && storedName) {
+      // Create preview URL for display
+      const imageUrl = `${BACKEND_URL}${FILE_PATH}${storedName}`;
+
+      return {
+        success: true,
+        storedName,
+        imagePreviewUrl: imageUrl, // URL for display only
+      };
+    } else {
+      return rejectWithValue("Upload failed: No file information returned from server");
+    }
+  } catch (error) {
+    console.error("Upload error:", error);
+    return rejectWithValue(error.response?.data?.message || error.message || "Image upload failed");
   }
-);
+});
 
 /* --------------------------------------------
    5. DELETE BANNER IMAGE (New thunk)
 --------------------------------------------- */
-export const deleteBannerImage = createAsyncThunk(
-  "formCreation/deleteBannerImage",
-  async (filename, { rejectWithValue }) => {
-    try {
-      await axios.delete(
-        `${BACKEND_URL}/api/upload/${filename}?token=${getToken()}`
-      );
-      return { success: true };
-    } catch (error) {
-      console.error("Delete banner error:", error);
-      // Non-critical error - file might already be deleted
-      return { success: true }; // Still return success to clear frontend state
-    }
+export const deleteBannerImage = createAsyncThunk("formCreation/deleteBannerImage", async (filename, { rejectWithValue }) => {
+  try {
+    await axios.delete(`${BACKEND_URL}/api/upload/${filename}?token=${getToken()}`, { withCredentials: true });
+    return { success: true };
+  } catch (error) {
+    console.error("Delete banner error:", error);
+    // Non-critical error - file might already be deleted
+    return { success: true }; // Still return success to clear frontend state
   }
-);
+});
 
-export const publishForm = createAsyncThunk(
-  "formCreation/publishForm",
-  async (formId, { rejectWithValue }) => {
-    try {
-      const response = await axios.post(
-        `${BACKEND_URL}/api/forms/${formId}/publish?token=${getToken()}`
-      );
+export const publishForm = createAsyncThunk("formCreation/publishForm", async (formId, { rejectWithValue }) => {
+  try {
+    const response = await axios.post(`${BACKEND_URL}/api/forms/${formId}/publish?token=${getToken()}`,{}, { withCredentials: true });
 
-      // Return the full response data
-      return {
-        success: true,
-        formToken:
-          response.data?.formToken || response.data?.data?.formToken || formId,
-        ...response.data,
-      };
-    } catch (error) {
-      console.error("Publish error:", error);
-      return rejectWithValue(
-        error.response?.data?.message ||
-          error.message ||
-          "Failed to publish form"
-      );
-    }
+    // Return the full response data
+    return {
+      success: true,
+      formToken: response.data?.formToken || response.data?.data?.formToken || formId,
+      ...response.data,
+    };
+  } catch (error) {
+    console.error("Publish error:", error);
+    return rejectWithValue(error.response?.data?.message || error.message || "Failed to publish form");
   }
-);
+});
 /* --------------------------------------------
    6. INITIAL STATE
 --------------------------------------------- */
@@ -426,7 +376,7 @@ export const {
   removeBannerImage,
   clearError,
   clearBannerError,
-  resetSchema
+  resetSchema,
 } = formCreationSlice.actions;
 
 export default formCreationSlice.reducer;
