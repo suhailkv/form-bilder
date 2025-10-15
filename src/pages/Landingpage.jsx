@@ -7,7 +7,7 @@ import { fetchFormsList, softDeleteForm } from "../redux/features/Adminformslice
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Icon } from "@iconify/react";
-// const AUTH_TOKEN = import.meta.env.VITE_AUTH_TOKEN;
+const AUTH_TOKEN = import.meta.env.VITE_AUTH_TOKEN;
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "";
 
 export default function LandingPage() {
