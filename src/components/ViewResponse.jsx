@@ -217,41 +217,150 @@ const ViewResponse = () => {
         </div>
       )}
 
-      {/* MODAL */}
-      <Modal open={!!selectedResponse} onClose={() => setSelectedResponse(null)}>
-        <Box
+     {/* MODAL */}
+<Modal open={!!selectedResponse} onClose={() => setSelectedResponse(null)}>
+  <Box
+    sx={{
+      position: "absolute",
+      top: "50%",
+      left: "50%",
+      transform: "translate(-50%, -50%)",
+      bgcolor: "white",
+      borderRadius: 2,
+      maxHeight: "80vh",
+      overflowY: "auto",
+      width: {
+        xs: "90%",
+        sm: "85%",
+        md: "70%",
+        lg: "60%",
+        xl: "50%",
+      },
+      p: {
+        xs: 2,
+        sm: 2.5,
+        md: 3,
+        lg: 3,
+        xl: 3,
+      },
+      maxWidth: "900px",
+    }}
+  >
+    <Typography
+      variant="h6"
+      gutterBottom
+      sx={{
+        fontSize: {
+          xs: "1.1rem",
+          sm: "1.25rem",
+          md: "1.25rem",
+          lg: "1.35rem",
+          xl: "1.35rem",
+        },
+      }}
+    >
+      Response Details
+    </Typography>
+    <Divider sx={{ mb: 2 }} />
+    {selectedResponse?.fields?.map((field, idx) => (
+      <Box key={idx} sx={{ mb: 2 }}>
+        <Typography
+          fontWeight={600}
           sx={{
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            bgcolor: "white",
-            p: 3,
-            borderRadius: 2,
-            maxHeight: "80vh",
-            overflowY: "auto",
+            fontSize: {
+              xs: "0.95rem",
+              sm: "1rem",
+              md: "1rem",
+              lg: "1.05rem",
+              xl: "1.05rem",
+            },
           }}
         >
-          <Typography variant="h6" gutterBottom>Response Details</Typography>
-          <Divider sx={{ mb: 2 }} />
-          {selectedResponse?.fields?.map((field, idx) => (
-            <Box key={idx} sx={{ mb: 2 }}>
-              <Typography fontWeight={600}>{field.label}</Typography>
-              {Array.isArray(field.value) ? (
-                <Typography>{field.value.join(", ")}</Typography>
-              ) : field.type === "uploadFile" ? (
-                <a href={field.value} target="_blank" rel="noopener noreferrer">{field.value}</a>
-              ) : field.type === "checkbox" ? (
-                <Typography>{field.value ? "Yes" : "No"}</Typography>
-              ) : (
-                <Typography>{field.value || "N/A"}</Typography>
-              )}
-              <Divider sx={{ mt: 1 }} />
-            </Box>
-          ))}
-          <Button onClick={() => setSelectedResponse(null)} variant="contained" sx={{ mt: 1 }}>Close</Button>
-        </Box>
-      </Modal>
+          {field.label}
+        </Typography>
+        {Array.isArray(field.value) ? (
+          <Typography
+            sx={{
+              fontSize: {
+                xs: "0.9rem",
+                sm: "0.95rem",
+                md: "0.95rem",
+                lg: "1rem",
+                xl: "1rem",
+              },
+              color: "text.secondary",
+              wordBreak: "break-word",
+            }}
+          >
+            {field.value.join(", ")}
+          </Typography>
+        ) : field.type === "uploadFile" ? (
+          <a
+            href={field.value}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              fontSize: "0.95rem",
+              color: "#1976d2",
+              textDecoration: "none",
+              wordBreak: "break-all",
+            }}
+          >
+            {field.value}
+          </a>
+        ) : field.type === "checkbox" ? (
+          <Typography
+            sx={{
+              fontSize: {
+                xs: "0.9rem",
+                sm: "0.95rem",
+                md: "0.95rem",
+                lg: "1rem",
+                xl: "1rem",
+              },
+              color: "text.secondary",
+            }}
+          >
+            {field.value ? "Yes" : "No"}
+          </Typography>
+        ) : (
+          <Typography
+            sx={{
+              fontSize: {
+                xs: "0.9rem",
+                sm: "0.95rem",
+                md: "0.95rem",
+                lg: "1rem",
+                xl: "1rem",
+              },
+              color: "text.secondary",
+              wordBreak: "break-word",
+            }}
+          >
+            {field.value || "N/A"}
+          </Typography>
+        )}
+        <Divider sx={{ mt: 1 }} />
+      </Box>
+    ))}
+    <Button
+      onClick={() => setSelectedResponse(null)}
+      variant="contained"
+      sx={{
+        mt: 2,
+        width: {
+          xs: "100%",
+          sm: "auto",
+          md: "auto",
+          lg: "auto",
+          xl: "auto",
+        },
+      }}
+    >
+      Close
+    </Button>
+  </Box>
+</Modal>
     </Box>
   );
 };
